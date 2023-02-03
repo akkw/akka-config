@@ -13,16 +13,18 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AkkaSocketServer implements RemotingServer {
+public class AkkaSocketServer extends AkkaNettySocketAbstract implements RemotingServer {
 
     private static final Logger logger = LoggerFactory.getLogger(AkkaSocketServer.class);
 
@@ -51,19 +53,20 @@ public class AkkaSocketServer implements RemotingServer {
 
     private int port = 0;
 
-    protected final NettyEventExecutor nettyEventExecutor = new NettyEventExecutor();
+
 
     public AkkaSocketServer(NettyServerConfig config) {
         this(config, null);
     }
 
     public AkkaSocketServer(NettyServerConfig config, ChannelEventListener listener) {
+        super(listener);
         this.serverBootstrap = new ServerBootstrap();
         this.channelEventListener = listener;
         this.nettyServerConfig = config;
         this.encoder = new NettyEncoder();
         this.connectionManageHandler = new NettyConnectManageHandler(listener);
-        this.serverHandler = new NettyServerHandler();
+        this.serverHandler = new NettyServerHandler(processorTable, defaultRequestProcessor, responseTable);
 
 
         int serverCallbackThreads = config.getServerCallbackThreads();
@@ -126,8 +129,23 @@ public class AkkaSocketServer implements RemotingServer {
     }
 
 
-    private boolean useEpoll() {
-        return Epoll.isAvailable();
+    @Override
+    public void registerDefaultProcessor(NettyRequestProcessor processor, ExecutorService executor) {
+        this.defaultRequestProcessor = new Pair<>(processor, executor);
+    }
+
+    @Override
+    public void registerProcessor(int requestCode, NettyRequestProcessor processor, ExecutorService processorExecutor) {
+        ExecutorService executor = processorExecutor;
+        if (executor == null) {
+            executor = this.publicExecutor;
+        }
+        this.processorTable.put(requestCode, new Pair<>(processor, executor));
+    }
+
+    @Override
+    public Pair<NettyRequestProcessor, ExecutorService> getProcessorPair(int requestCode) {
+        return this.processorTable.get(requestCode);
     }
 
     @Override
@@ -215,6 +233,10 @@ public class AkkaSocketServer implements RemotingServer {
                 logger.error("NettyRemotingServer shutdown exception, ", e);
             }
         }
+    }
+
+    private boolean useEpoll() {
+        return Epoll.isAvailable();
     }
 
     public static void main(String[] args) {
