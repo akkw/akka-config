@@ -14,6 +14,26 @@ public class NettyServerConfig {
 
     private int listenPort = 9707;
 
+    private int serverOnewaySemaphoreValue = 256;
+
+    private int serverAsyncSemaphoreValue = 64;
+
+    public int getServerOnewaySemaphoreValue() {
+        return serverOnewaySemaphoreValue;
+    }
+
+    public void setServerOnewaySemaphoreValue(int serverOnewaySemaphoreValue) {
+        this.serverOnewaySemaphoreValue = serverOnewaySemaphoreValue;
+    }
+
+    public int getServerAsyncSemaphoreValue() {
+        return serverAsyncSemaphoreValue;
+    }
+
+    public void setServerAsyncSemaphoreValue(int serverAsyncSemaphoreValue) {
+        this.serverAsyncSemaphoreValue = serverAsyncSemaphoreValue;
+    }
+
     public int getListenPort() {
         return listenPort;
     }

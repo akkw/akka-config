@@ -3,6 +3,9 @@ package com.akka.remoting.netty;/*
  */
 
 import com.akka.remoting.Service;
+import com.akka.remoting.exception.RemotingSendRequestException;
+import com.akka.remoting.exception.RemotingTimeoutException;
+import com.akka.remoting.exception.RemotingTooMuchRequestException;
 import com.akka.remoting.protocol.Command;
 import io.netty.channel.Channel;
 import javafx.util.Pair;
@@ -20,9 +23,9 @@ public interface RemotingServer extends Service {
     Pair<NettyRequestProcessor, ExecutorService> getProcessorPair(final int requestCode);
 
 
-    Command invokeSync(final Channel channel, final Command command, final long timeMillis);
+    Command invokeSync(final Channel channel, final Command command, final long timeMillis) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException;
 
-    void invokeAsync(final Channel channel, final Command command, final long timeoutMillis, InvokeCallback invokeCallback);
+    void invokeAsync(final Channel channel, final Command command, final long timeoutMillis, InvokeCallback invokeCallback) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException;
 
-    void invokeOneway(final Channel channel, final Command command, final long timeoutMillis);
+    void invokeOneway(final Channel channel, final Command command, final long timeoutMillis) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException;
 }

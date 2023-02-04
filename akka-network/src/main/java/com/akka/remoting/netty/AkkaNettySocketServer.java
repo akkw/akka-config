@@ -2,8 +2,10 @@ package com.akka.remoting.netty;/*
     create qiangzhiwei time 2023/2/1
  */
 
+import com.akka.remoting.exception.RemotingSendRequestException;
+import com.akka.remoting.exception.RemotingTimeoutException;
+import com.akka.remoting.exception.RemotingTooMuchRequestException;
 import com.akka.remoting.protocol.Command;
-import com.akka.remoting.protocol.NettyEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
@@ -18,15 +20,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
 import java.util.Timer;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AkkaSocketServer extends AkkaNettySocketAbstract implements RemotingServer {
+public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements RemotingServer {
 
-    private static final Logger logger = LoggerFactory.getLogger(AkkaSocketServer.class);
+    private static final Logger logger = LoggerFactory.getLogger(AkkaNettySocketServer.class);
 
     private final ServerBootstrap serverBootstrap;
 
@@ -49,24 +50,23 @@ public class AkkaSocketServer extends AkkaNettySocketAbstract implements Remotin
 
     private NettyConnectManageHandler connectionManageHandler;
 
-    private NettyEncoder encoder;
+    private final NettyEncoder encoder = new NettyEncoder();;
 
     private int port = 0;
 
 
 
-    public AkkaSocketServer(NettyServerConfig config) {
+    public AkkaNettySocketServer(NettyServerConfig config) {
         this(config, null);
     }
 
-    public AkkaSocketServer(NettyServerConfig config, ChannelEventListener listener) {
-        super(listener);
+    public AkkaNettySocketServer(NettyServerConfig config, ChannelEventListener listener) {
+        super(config.getServerOnewaySemaphoreValue(), config.getServerAsyncSemaphoreValue(), listener);
         this.serverBootstrap = new ServerBootstrap();
         this.channelEventListener = listener;
         this.nettyServerConfig = config;
-        this.encoder = new NettyEncoder();
         this.connectionManageHandler = new NettyConnectManageHandler(listener);
-        this.serverHandler = new NettyServerHandler(processorTable, defaultRequestProcessor, responseTable);
+        this.serverHandler = new NettyServerHandler(processorTable, defaultRequestProcessor, responseTable, this::processMessageReceived);
 
 
         int serverCallbackThreads = config.getServerCallbackThreads();
@@ -149,18 +149,18 @@ public class AkkaSocketServer extends AkkaNettySocketAbstract implements Remotin
     }
 
     @Override
-    public Command invokeSync(Channel channel, Command command, long timeMillis) {
-        return null;
+    public Command invokeSync(Channel channel, Command command, long timeMillis) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+        return invokeSyncImpl(channel, command, timeMillis);
     }
 
     @Override
-    public void invokeAsync(Channel channel, Command command, long timeoutMillis, InvokeCallback invokeCallback) {
-
+    public void invokeAsync(Channel channel, Command command, long timeoutMillis, InvokeCallback invokeCallback) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException {
+        invokeAsyncImpl(channel, command, timeoutMillis, invokeCallback);
     }
 
     @Override
-    public void invokeOneway(Channel channel, Command command, long timeoutMillis) {
-
+    public void invokeOneway(Channel channel, Command command, long timeoutMillis) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException {
+        invokeOnewayImpl(channel, command, timeoutMillis);
     }
 
     @Override
@@ -239,8 +239,8 @@ public class AkkaSocketServer extends AkkaNettySocketAbstract implements Remotin
         return Epoll.isAvailable();
     }
 
-    public static void main(String[] args) {
-        AkkaSocketServer socketServer = new AkkaSocketServer(new NettyServerConfig());
-        socketServer.start();
+    @Override
+    public ExecutorService getCallbackExecutor() {
+        return publicExecutor;
     }
 }
