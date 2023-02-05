@@ -4,6 +4,7 @@ import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
 import com.akka.remoting.protocol.Command;
+import io.netty.channel.ChannelHandlerContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,5 +36,22 @@ public class AkkaNettySocketClientTest {
 
         Command response = client.invokeSync(address, command, 1000000);
         Assert.assertNotNull(response);
+    }
+
+    @Test
+    public void testProcessor() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+        client.registerProcessor(10, new NettyRequestProcessor() {
+            @Override
+            public Command processRequest(ChannelHandlerContext ctx, Command request) throws Exception {
+                System.out.println(request);
+                return null;
+            }
+
+            @Override
+            public boolean rejectRequest() {
+                return false;
+            }
+        }, null);
+        write();
     }
 }

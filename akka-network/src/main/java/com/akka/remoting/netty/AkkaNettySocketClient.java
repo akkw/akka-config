@@ -38,7 +38,7 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     private final Bootstrap bootstrap = new Bootstrap();
 
-    private EventLoopGroup eventLoopGroupWorker;
+    private final EventLoopGroup eventLoopGroupWorker;
 
     private final Lock lockChannelTables = new ReentrantLock();
 
@@ -52,7 +52,7 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     private final AtomicInteger namesrvIndex = new AtomicInteger(initValueIndex());
 
-    private Lock namesrvChannelLock = new ReentrantLock();
+    private final Lock namesrvChannelLock = new ReentrantLock();
 
     private final ExecutorService publicExecutor;
 
@@ -154,8 +154,7 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
                     throw new RemotingTimeoutException("invokeSync call the addr[" + addr + "] timeout");
                 }
 
-                final Command response = this.invokeSyncImpl(channel, request, timeoutMillis - costTime);
-                return response;
+                return this.invokeSyncImpl(channel, request, timeoutMillis - costTime);
             } catch (RemotingSendRequestException e) {
                 logger.warn("invokeSync: send request exception, so close the channel[{}]", addr);
                 this.closeChannel(addr, channel);
@@ -346,7 +345,7 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     @Override
     public ExecutorService getCallbackExecutor() {
-        return publicExecutor;
+        return null == callbackExecutor ? publicExecutor : callbackExecutor;
     }
 
     @Override
