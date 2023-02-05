@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,10 +51,10 @@ public class Command {
     private transient CommandCustomHeader customHeader;
 
 
-    private static final SerializeType serializeTypeConfigInThisServer = JSON;
+    private static final SerializeType SERIALIZE_TYPE_CONFIG_IN_THIS_SERVER = JSON;
 
 
-    private SerializeType serializeTypeCurrentRPC = serializeTypeConfigInThisServer;
+    private SerializeType serializeTypeCurrentRPC = SERIALIZE_TYPE_CONFIG_IN_THIS_SERVER;
 
     private transient byte[] body;
 
@@ -176,7 +175,7 @@ public class Command {
     }
 
     public static SerializeType getSerializeTypeConfigInThisServer() {
-        return serializeTypeConfigInThisServer;
+        return SERIALIZE_TYPE_CONFIG_IN_THIS_SERVER;
     }
 
     public SerializeType getSerializeTypeCurrentRPC() {

@@ -18,8 +18,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.SocketAddress;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AkkaNettySocketAbstract {
 
@@ -46,7 +55,7 @@ public abstract class AkkaNettySocketAbstract {
         this.nettyEventExecutor = new NettyEventExecutor(listener);
     }
 
-    protected void processMessageReceived(ChannelHandlerContext ctx, Command msg){
+    protected void processMessageReceived(ChannelHandlerContext ctx, Command msg) {
         if (msg != null) {
             switch (msg.getType()) {
                 case REQUEST_COMMAND:
@@ -240,7 +249,7 @@ public abstract class AkkaNettySocketAbstract {
                     if (future.isSuccess()) {
                         responseFuture.setSendRequestOK(true);
                         return;
-                    }else {
+                    } else {
                         responseFuture.setSendRequestOK(false);
                     }
 

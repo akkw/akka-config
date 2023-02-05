@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class ServiceThread implements Runnable {
-    private static final Logger log = LoggerFactory.getLogger(ServiceThread.class);
+    private static final Logger logger = LoggerFactory.getLogger(ServiceThread.class);
 
     private static final long JOIN_TIME = 90 * 1000;
     protected final Thread thread;
@@ -27,7 +27,7 @@ public abstract class ServiceThread implements Runnable {
 
     public void shutdown(final boolean interrupt) {
         this.stopped = true;
-        log.info("shutdown thread " + this.getServiceName() + " interrupt " + interrupt);
+        logger.info("shutdown thread " + this.getServiceName() + " interrupt " + interrupt);
         synchronized (this) {
             if (!this.hasNotified) {
                 this.hasNotified = true;
@@ -43,10 +43,10 @@ public abstract class ServiceThread implements Runnable {
             long beginTime = System.currentTimeMillis();
             this.thread.join(this.getJointime());
             long elapsedTime = System.currentTimeMillis() - beginTime;
-            log.info("join thread " + this.getServiceName() + " elapsed time(ms) " + elapsedTime + " "
+            logger.info("join thread " + this.getServiceName() + " elapsed time(ms) " + elapsedTime + " "
                 + this.getJointime());
         } catch (InterruptedException e) {
-            log.error("Interrupted", e);
+            logger.error("Interrupted", e);
         }
     }
 

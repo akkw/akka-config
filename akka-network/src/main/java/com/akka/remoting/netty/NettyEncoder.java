@@ -4,7 +4,6 @@ package com.akka.remoting.netty;/*
 
 import com.akka.remoting.common.NettyNetworkHelper;
 import com.akka.remoting.common.RemotingUtil;
-import com.akka.remoting.exception.RemotingEncodeException;
 import com.akka.remoting.protocol.Command;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;

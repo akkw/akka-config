@@ -6,7 +6,6 @@ import com.akka.remoting.protocol.Command;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.util.internal.logging.InternalLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,6 @@ public class NettyDecoder extends LengthFieldBasedFrameDecoder {
         try {
             frame = (ByteBuf) super.decode(ctx, in);
             if (null == frame) {
-                System.out.println("NettyDecoder null");
                 return null;
             }
             return Command.decode(frame);

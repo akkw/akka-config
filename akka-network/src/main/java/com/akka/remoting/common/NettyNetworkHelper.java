@@ -21,7 +21,7 @@ public class NettyNetworkHelper {
     public static final String ROCKETMQ_REMOTING = "RocketmqRemoting";
     public static final String DEFAULT_CHARSET = "UTF-8";
 
-    private static final Logger log = LoggerFactory.getLogger(NettyNetworkHelper.class);
+    private static final Logger logger = LoggerFactory.getLogger(NettyNetworkHelper.class);
     private static final AttributeKey<String> REMOTE_ADDR_KEY = AttributeKey.valueOf("RemoteAddr");
 
     public static String exceptionSimpleDesc(final Throwable e) {
@@ -120,7 +120,7 @@ public class NettyNetworkHelper {
                 byteBufferBody.flip();
                 return Command.decode(byteBufferBody);
             } catch (IOException | RemotingSendRequestException | RemotingCommandException e) {
-                log.error("invokeSync failure", e);
+                logger.error("invokeSync failure", e);
 
                 if (sendRequestOK) {
                     throw new RemotingTimeoutException(addr, timeoutMillis);

@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public class RemotingUtil {
     public static final String OS_NAME = System.getProperty("os.name");
 
-    private static final Logger log = LoggerFactory.getLogger(RemotingUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(RemotingUtil.class);
     private static boolean isLinuxPlatform = false;
     private static boolean isWindowsPlatform = false;
 
@@ -73,7 +73,7 @@ public class RemotingUtil {
                             }
                         }
                     } catch (final Exception e) {
-                        log.warn("Open ePoll Selector for linux platform exception", e);
+                        logger.warn("Open ePoll Selector for linux platform exception", e);
                     }
                 }
             } catch (final Exception e) {
@@ -135,7 +135,7 @@ public class RemotingUtil {
             final InetAddress localHost = InetAddress.getLocalHost();
             return normalizeHostAddress(localHost);
         } catch (Exception e) {
-            log.error("Failed to obtain local address", e);
+            logger.error("Failed to obtain local address", e);
         }
 
         return null;
@@ -221,7 +221,7 @@ public class RemotingUtil {
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                log.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
+                logger.info("closeChannel: close the connection to remote address[{}] result: {}", addrRemote,
                     future.isSuccess());
             }
         });
