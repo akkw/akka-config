@@ -16,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -290,22 +291,57 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     @Override
     public void invokeAsync(String addr, Command request, long timeoutMillis, InvokeCallback invokeCallback) throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
+        final long beginStartTime = System.currentTimeMillis();
+        final Channel channel = this.getAndCreateChannel(addr);
 
+        if (channel != null && channel.isActive()) {
+            try {
+                final long costTime = System.currentTimeMillis() - beginStartTime;
+                if (timeoutMillis < costTime) {
+                    throw new RemotingTooMuchRequestException("invokeAsync call the addr[" + addr + "] timeout");
+                }
+                this.invokeAsyncImpl(channel, request, timeoutMillis, invokeCallback);
+            } catch (RemotingSendRequestException e) {
+                logger.warn("invokeAsync: send request exception, so close the channel[{}]", addr);
+                this.closeChannel(addr, channel);
+                throw e;
+            }
+        } else {
+            this.closeChannel(addr, channel);
+            throw new RemotingConnectException(addr);
+        }
     }
 
     @Override
     public void invokeOneway(String addr, Command request, long timeoutMillis) throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException {
-
+        final Channel channel = this.getAndCreateChannel(addr);
+        if (channel != null && channel.isActive()) {
+            try {
+                this.invokeOnewayImpl(channel, request, timeoutMillis);
+            } catch (RemotingSendRequestException e) {
+                logger.warn("invokeOneway: send request exception, so close the channel[{}]", addr);
+                this.closeChannel(addr, channel);
+                throw e;
+            }
+        } else {
+            this.closeChannel(addr, channel);
+            throw new RemotingConnectException(addr);
+        }
     }
 
     @Override
     public void registerProcessor(int requestCode, NettyRequestProcessor processor, ExecutorService executor) {
-
+        ExecutorService executorThis = executor;
+        if (null == executor) {
+            executorThis = this.publicExecutor;
+        }
+        final Pair<NettyRequestProcessor, ExecutorService> pair = new Pair<>(processor, executorThis);
+        this.processorTable.put(requestCode, pair);
     }
 
     @Override
     public void setCallbackExecutor(ExecutorService callbackExecutor) {
-
+        this.callbackExecutor = callbackExecutor;
     }
 
     @Override
@@ -315,6 +351,10 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     @Override
     public boolean isChannelWritable(String addr) {
+        final ChannelWrapper cw = this.channelTables.get(addr);
+        if (cw != null && cw.isOK()) {
+            return cw.isWritable();
+        }
         return false;
     }
 
@@ -380,13 +420,35 @@ public class AkkaNettySocketClient extends AkkaNettySocketAbstract implements Re
 
     @Override
     public void shutdown() {
-//        try {
-//            this.timer.cancel();
-//
-//            for (ChannelWrapper cw : this.channelTables.values()) {
-//
-//            }
-//        }
+        try {
+            this.timer.cancel();
+
+            for (ChannelWrapper cw : this.channelTables.values()) {
+                this.closeChannel(cw.getChannel());
+            }
+
+            this.channelTables.clear();
+
+            this.eventLoopGroupWorker.shutdownGracefully();
+
+            if (this.nettyEventExecutor != null) {
+                this.nettyEventExecutor.shutdown();
+            }
+
+            if (this.defaultEventExecutorGroup != null) {
+                this.defaultEventExecutorGroup.shutdownGracefully();
+            }
+        } catch (Exception e) {
+            logger.error("NettyRemotingClient shutdown exception, ", e);
+        }
+
+        if (this.publicExecutor != null) {
+            try {
+                this.publicExecutor.shutdown();
+            } catch (Exception e) {
+                logger.error("NettyRemotingServer shutdown exception, ", e);
+            }
+        }
     }
 
 

@@ -7,6 +7,7 @@ import com.akka.remoting.exception.RemotingTimeoutException;
 import com.akka.remoting.exception.RemotingTooMuchRequestException;
 import com.akka.remoting.protocol.Command;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -46,15 +47,13 @@ public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements Re
 
     private DefaultEventExecutorGroup defaultEventExecutorGroup;
 
-    private NettyServerHandler serverHandler;
+    private final NettyServerHandler serverHandler;
 
-    private NettyConnectManageHandler connectionManageHandler;
+    private final NettyConnectManageHandler connectionManageHandler;
 
     private final NettyEncoder encoder = new NettyEncoder();;
 
     private int port = 0;
-
-
 
     public AkkaNettySocketServer(NettyServerConfig config) {
         this(config, null);
@@ -135,12 +134,12 @@ public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements Re
     }
 
     @Override
-    public void registerProcessor(int requestCode, NettyRequestProcessor processor, ExecutorService processorExecutor) {
-        ExecutorService executor = processorExecutor;
+    public void registerProcessor(int requestCode, NettyRequestProcessor processor, ExecutorService executor) {
+        ExecutorService executorThis = executor;
         if (executor == null) {
-            executor = this.publicExecutor;
+            executorThis = this.publicExecutor;
         }
-        this.processorTable.put(requestCode, new Pair<>(processor, executor));
+        this.processorTable.put(requestCode, new Pair<>(processor, executorThis));
     }
 
     @Override
@@ -164,6 +163,11 @@ public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements Re
     }
 
     @Override
+    public int port() {
+        return this.port;
+    }
+
+    @Override
     public void start() {
         this.defaultEventExecutorGroup = new DefaultEventExecutorGroup(
                 nettyServerConfig.getServerWorkerThreads(),
@@ -177,8 +181,8 @@ public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements Re
                     }
                 });
 
-        this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
-                .channel(useEpoll()? EpollServerSocketChannel.class : NioServerSocketChannel.class)
+        final ServerBootstrap childHandler = this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
+                .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
                 .option(ChannelOption.SO_BACKLOG, nettyServerConfig.getServerSocketBacklog())
                 .option(ChannelOption.SO_REUSEADDR, true)
                 .option(ChannelOption.SO_KEEPALIVE, false)
@@ -195,8 +199,26 @@ public class AkkaNettySocketServer extends AkkaNettySocketAbstract implements Re
                     }
                 });
 
+        if (nettyServerConfig.getServerSocketSndBufSize() > 0) {
+            logger.info("server set SO_SNDBUF to {}", nettyServerConfig.getServerSocketSndBufSize());
+            childHandler.childOption(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize());
+        }
+        if (nettyServerConfig.getServerSocketRcvBufSize() > 0) {
+            logger.info("server set SO_RCVBUF to {}", nettyServerConfig.getServerSocketRcvBufSize());
+            childHandler.childOption(ChannelOption.SO_RCVBUF, nettyServerConfig.getServerSocketRcvBufSize());
+        }
+        if (nettyServerConfig.getWriteBufferLowWaterMark() > 0 && nettyServerConfig.getWriteBufferHighWaterMark() > 0) {
+            logger.info("server set netty WRITE_BUFFER_WATER_MARK to {},{}",
+                    nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark());
+            childHandler.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(
+                    nettyServerConfig.getWriteBufferLowWaterMark(), nettyServerConfig.getWriteBufferHighWaterMark()));
+        }
+
+        if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
+            childHandler.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        }
         try {
-            ChannelFuture sync = this.serverBootstrap.bind().sync();
+            ChannelFuture sync = childHandler.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();
             this.port = addr.getPort();
         } catch (InterruptedException e1) {

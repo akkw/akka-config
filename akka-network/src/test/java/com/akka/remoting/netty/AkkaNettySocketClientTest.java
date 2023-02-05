@@ -30,7 +30,7 @@ public class AkkaNettySocketClientTest {
 
     @Test
     public void write () throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        Command command =  Command.createResponseCommand(10,"");
+        Command command =  Command.createRequestCommand(10,null);
         command.setBody("test message".getBytes(StandardCharsets.UTF_8));
 
         Command response = client.invokeSync(address, command, 1000000);

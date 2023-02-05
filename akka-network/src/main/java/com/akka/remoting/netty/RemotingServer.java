@@ -28,4 +28,6 @@ public interface RemotingServer extends Service {
     void invokeAsync(final Channel channel, final Command command, final long timeoutMillis, InvokeCallback invokeCallback) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException;
 
     void invokeOneway(final Channel channel, final Command command, final long timeoutMillis) throws RemotingSendRequestException, RemotingTimeoutException, InterruptedException, RemotingTooMuchRequestException;
+
+    int port();
 }

@@ -18,6 +18,52 @@ public class NettyServerConfig {
 
     private int serverAsyncSemaphoreValue = 64;
 
+    private int serverSocketSndBufSize = NettySystemConfig.socketSndbufSize;
+    private int serverSocketRcvBufSize = NettySystemConfig.socketRcvbufSize;
+    private int writeBufferHighWaterMark = NettySystemConfig.writeBufferHighWaterMark;
+    private int writeBufferLowWaterMark = NettySystemConfig.writeBufferLowWaterMark;
+    private boolean serverPooledByteBufAllocatorEnable = true;
+
+    public boolean isServerPooledByteBufAllocatorEnable() {
+        return serverPooledByteBufAllocatorEnable;
+    }
+
+    public void setServerPooledByteBufAllocatorEnable(boolean serverPooledByteBufAllocatorEnable) {
+        this.serverPooledByteBufAllocatorEnable = serverPooledByteBufAllocatorEnable;
+    }
+
+    public int getServerSocketSndBufSize() {
+        return serverSocketSndBufSize;
+    }
+
+    public void setServerSocketSndBufSize(int serverSocketSndBufSize) {
+        this.serverSocketSndBufSize = serverSocketSndBufSize;
+    }
+
+    public int getServerSocketRcvBufSize() {
+        return serverSocketRcvBufSize;
+    }
+
+    public void setServerSocketRcvBufSize(int serverSocketRcvBufSize) {
+        this.serverSocketRcvBufSize = serverSocketRcvBufSize;
+    }
+
+    public int getWriteBufferHighWaterMark() {
+        return writeBufferHighWaterMark;
+    }
+
+    public void setWriteBufferHighWaterMark(int writeBufferHighWaterMark) {
+        this.writeBufferHighWaterMark = writeBufferHighWaterMark;
+    }
+
+    public int getWriteBufferLowWaterMark() {
+        return writeBufferLowWaterMark;
+    }
+
+    public void setWriteBufferLowWaterMark(int writeBufferLowWaterMark) {
+        this.writeBufferLowWaterMark = writeBufferLowWaterMark;
+    }
+
     public int getServerOnewaySemaphoreValue() {
         return serverOnewaySemaphoreValue;
     }

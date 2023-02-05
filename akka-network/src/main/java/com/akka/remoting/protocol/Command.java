@@ -24,6 +24,8 @@ import static com.akka.remoting.protocol.SerializeType.JSON;
 
 public class Command {
 
+    public static final String REMOTING_VERSION_KEY = "akka.remoting.version";
+
     protected Command() {
     }
 
@@ -81,6 +83,27 @@ public class Command {
     public void markResponseType() {
         int bits = 1 << RPC_TYPE;
         this.flag |= bits;
+    }
+
+    public static Command createRequestCommand(int code, CommandCustomHeader customHeader) {
+        Command cmd = new Command();
+        cmd.setCode(code);
+        cmd.customHeader = customHeader;
+        setCmdVersion(cmd);
+        return cmd;
+    }
+
+    private static void setCmdVersion(Command cmd) {
+        if (configVersion >= 0) {
+            cmd.setVersion(configVersion);
+        } else {
+            String v = System.getProperty(REMOTING_VERSION_KEY);
+            if (v != null) {
+                int value = Integer.parseInt(v);
+                cmd.setVersion(value);
+                configVersion = value;
+            }
+        }
     }
 
     public static Command createResponseCommand(int code, String remark) {
