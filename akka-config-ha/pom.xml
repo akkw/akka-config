@@ -15,4 +15,14 @@
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>io.etcd</groupId>
+            <artifactId>jetcd-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.akka</groupId>
+            <artifactId>akka-tools</artifactId>
+        </dependency>
+    </dependencies>
 </project>
