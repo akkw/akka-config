@@ -1,8 +1,11 @@
-package com.akka.config.ha.etcd;/* 
+package com.akka.config.ha.etcd;
+
+/*
     create qiangzhiwei time 2023/2/5
  */
 
 import com.akka.config.ha.listener.DataListener;
+import com.akka.config.ha.protocol.EtcdEvent;
 import com.akka.tools.api.LifeCycle;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
@@ -12,6 +15,8 @@ import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchResponse;
 import io.grpc.stub.StreamObserver;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -19,10 +24,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.*;
 
-
 public class EtcdClient implements LifeCycle {
 
-    private ClientBuilder clientBuilder;
+    private static final Logger logger = LoggerFactory.getLogger(EtcdClient.class);
+    private final ClientBuilder clientBuilder;
 
     private Client client;
 
@@ -60,20 +65,116 @@ public class EtcdClient implements LifeCycle {
 
     @Override
     public void stop() {
-
         if (leaseId != null) {
             leaseClient.revoke(leaseId);
+            leaseClient.close();
+        }
+        if (kvClient != null) {
+            kvClient.close();
+        }
+        if (lockClient != null) {
+            lockClient.close();
+        }
+        if (watchClient != null) {
+            watchClient.close();
+        }
+        if (client != null) {
+            client.close();
         }
     }
 
 
+    public String lock(String key) throws ExecutionException, InterruptedException {
 
-    public void watch(String key, DataListener listener) {
-        this.watchClient.watch(createByteSequence(key), new Watch.Listener() {
+        if (key == null || "".equals(key)) {
+            throw new NullPointerException();
+        }
 
+        if (lockClient == null) {
+            throw new NullPointerException();
+        }
+
+        ByteSequence lockKey = createByteSequence(key);
+        return lockClient.lock(lockKey, leaseId).get().getKey().toString();
+    }
+
+    public String unlock(String key) throws ExecutionException, InterruptedException {
+
+        if (key == null || "".equals(key)) {
+            throw new NullPointerException();
+        }
+
+        if (lockClient == null) {
+            throw new NullPointerException();
+        }
+
+        ByteSequence lockKey = createByteSequence(key);
+        return lockClient.unlock(lockKey).get().toString();
+    }
+
+
+
+    public void watch(String key, DataListener listener, ExecutorService publishEventExecutor) {
+
+        if (key == null || listener == null) {
+            throw new NullPointerException();
+        }
+        Watch.Listener watchListener = new Watch.Listener() {
             @Override
             public void onNext(WatchResponse response) {
+
                 final List<WatchEvent> events = response.getEvents();
+                for (WatchEvent we : events) {
+                    Runnable publishEventRunnable = publishEventRunnable(we, listener);
+                    if (publishEventRunnable == null) {
+                        logger.error("EtcdClient.watch onNext event continue, event: {}", we);
+                        continue;
+                    }
+
+                    ExecutorService thisPublishEventExecutor = publishEventExecutor;
+                    if (publishEventExecutor == null) {
+                        thisPublishEventExecutor = EtcdClient.this.publishEventExecutor;
+                    }
+                    thisPublishEventExecutor.execute(publishEventRunnable);
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                listener.onException(throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+
+            }
+        };
+
+        this.watchClient.watch(createByteSequence(key), watchListener);
+    }
+
+    public void watch(String key, DataListener listener) {
+
+        if (key == null || listener == null) {
+            throw new NullPointerException();
+        }
+
+
+        Watch.Listener watchListener = new Watch.Listener() {
+            @Override
+            public void onNext(WatchResponse response) {
+
+                final List<WatchEvent> events = response.getEvents();
+                for (WatchEvent we : events) {
+                    Runnable publishEventRunnable = publishEventRunnable(we, listener);
+
+                    if (publishEventRunnable == null) {
+                        logger.error("EtcdClient.watch onNext event continue, event: {}", we);
+                        continue;
+                    }
+
+                    EtcdClient.this.publishEventExecutor.execute(publishEventRunnable);
+                }
 
             }
 
@@ -86,7 +187,36 @@ public class EtcdClient implements LifeCycle {
             public void onCompleted() {
 
             }
-        });
+        };
+
+        this.watchClient.watch(createByteSequence(key), watchListener);
+    }
+
+    private Runnable publishEventRunnable(WatchEvent watchEvent, DataListener listener) {
+        if (watchEvent == null || listener == null) {
+            return null;
+        }
+
+        final EtcdEvent etcdEvent;
+        if (watchEvent.getEventType() != WatchEvent.EventType.PUT) {
+            if (watchEvent.getEventType() == WatchEvent.EventType.DELETE) {
+                etcdEvent = new EtcdEvent(watchEvent.getKeyValue().toString(), watchEvent.getKeyValue().toString(), EtcdEvent.EtcdEventType.DELETE);
+            } else {
+                etcdEvent = new EtcdEvent(watchEvent.getKeyValue().toString(), watchEvent.getKeyValue().toString(), EtcdEvent.EtcdEventType.UNRECOGNIZED);
+            }
+        } else {
+            if (watchEvent.getPrevKV() != null) {
+                etcdEvent = new EtcdEvent(watchEvent.getKeyValue().toString(), watchEvent.getKeyValue().toString(), EtcdEvent.EtcdEventType.UPDATE);
+            } else {
+                etcdEvent = new EtcdEvent(watchEvent.getKeyValue().toString(), watchEvent.getKeyValue().toString(), EtcdEvent.EtcdEventType.CREATE);
+            }
+        }
+        return new Runnable() {
+            @Override
+            public void run() {
+                listener.onEvent(etcdEvent);
+            }
+        };
     }
 
     public void put(String key, String value) throws ExecutionException, InterruptedException {
@@ -108,6 +238,7 @@ public class EtcdClient implements LifeCycle {
             final List<KeyValue> getKvs = this.kvClient.get(createByteSequence(key), getOption)
                     .get()
                     .getKvs();
+
             List<Pair<String, String>> kvsResult = new ArrayList<>();
             for (KeyValue kv : getKvs) {
                 kvsResult.add(new Pair<>(kv.getKey().toString(), kv.getValue().toString()));
@@ -143,77 +274,5 @@ public class EtcdClient implements LifeCycle {
 
     private ByteSequence createByteSequence(String value) {
         return ByteSequence.from(value, StandardCharsets.UTF_8);
-    }
-
-    public static void main(String[] args) throws InterruptedException, ExecutionException {
-        EtcdClient etcdClient = new EtcdClient(new EtcdConfig());
-        etcdClient.start();
-
-        new Thread(() -> {
-
-            try {
-                final long id = etcdClient.leaseClient.grant(10).get().getID();
-                etcdClient.leaseClient.keepAlive(id, new StreamObserver<LeaseKeepAliveResponse>() {
-                    @Override
-                    public void onNext(LeaseKeepAliveResponse value) {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-
-                    }
-
-                    @Override
-                    public void onCompleted() {
-
-                    }
-                });
-                final ByteSequence from = ByteSequence.from("/root/akka/leader", StandardCharsets.UTF_8);
-                ByteSequence proposal = ByteSequence.from("member01", StandardCharsets.UTF_8);
-                final String string = etcdClient.electionClient.campaign(from, id, proposal).get().getLeader().getKey().toString();
-                System.out.println("11: " + string);
-                TimeUnit.SECONDS.sleep(30);
-                System.out.println("leader1 end");
-                etcdClient.leaseClient.revoke(id);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-
-        }).start();
-
-        new Scanner(System.in).nextLine();
-
-        new Thread(() -> {
-
-            try {
-                final long id = etcdClient.leaseClient.grant(10).get().getID();
-                etcdClient.leaseClient.keepAlive(id, new StreamObserver<LeaseKeepAliveResponse>() {
-                    @Override
-                    public void onNext(LeaseKeepAliveResponse value) {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-
-                    }
-
-                    @Override
-                    public void onCompleted() {
-
-                    }
-                });
-                final ByteSequence from = ByteSequence.from("/root/akka/leader", StandardCharsets.UTF_8);
-                ByteSequence proposal = ByteSequence.from("member02", StandardCharsets.UTF_8);
-                final String string = etcdClient.electionClient.campaign(from, id, proposal).get().getLeader().getKey().toString();
-                System.out.println("22: " + string);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-
-        }).start();
-
-        new CountDownLatch(1).await();
     }
 }
