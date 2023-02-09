@@ -4,6 +4,7 @@ package com.akka.config.core;/*
 
 import com.akka.config.ha.controller.HaController;
 import com.akka.config.ha.etcd.EtcdClient;
+import com.akka.config.ha.etcd.EtcdConfig;
 import com.akka.config.protocol.MetadataEvent;
 import com.akka.tools.api.LifeCycle;
 import com.akka.tools.bus.AsyncEventBus;
@@ -27,16 +28,20 @@ public class ServerController implements LifeCycle {
 
     private final Timer leaderTimer;
 
-    public ServerController(EtcdClient etcdClient, HaController haController) {
+    private final EtcdConfig etcdConfig;
+
+    public ServerController(EtcdClient etcdClient) {
         this.etcdClient = etcdClient;
-        this.haController = haController;
+        this.etcdConfig = etcdClient.getConfig();
         this.leaderTimer = new Timer("CheckNamespaceLeaderThread");
         this.etcdDataListener = new EtcdDataListener(etcdClient, metadataBus);
+        this.haController = new HaController(etcdClient, etcdConfig.getPathConfig());
     }
 
     @Override
     public void start() {
         this.metadataBus.addStation(this::metadataHandler);
+        this.etcdDataListener.start();
     }
 
 
