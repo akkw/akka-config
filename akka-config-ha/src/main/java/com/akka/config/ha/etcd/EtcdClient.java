@@ -8,6 +8,8 @@ import com.akka.config.ha.listener.DataListener;
 import com.akka.config.ha.protocol.EtcdEvent;
 import com.akka.tools.api.LifeCycle;
 import io.etcd.jetcd.*;
+import io.etcd.jetcd.election.NoLeaderException;
+import io.etcd.jetcd.election.NotLeaderException;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
 import io.etcd.jetcd.options.GetOption;
@@ -21,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class EtcdClient implements LifeCycle {
@@ -51,6 +52,7 @@ public class EtcdClient implements LifeCycle {
         this.config = config;
         this.clientBuilder = Client.builder().endpoints(config.getEndpoints().split(","));
     }
+
 
 
     @Override
@@ -250,8 +252,35 @@ public class EtcdClient implements LifeCycle {
 
     public String leader(String key, String member) throws ExecutionException, InterruptedException {
         checkOrCreateLeaseId();
-        return this.electionClient.campaign(createByteSequence(key), leaseId, createByteSequence(member))
+        final String leaderKey = this.electionClient.campaign(createByteSequence(key), leaseId, createByteSequence(member))
                 .get()
+                .getLeader()
+                .getName()
+                .toString();
+        this.leaseClient.keepAlive(leaseId, new StreamObserver<LeaseKeepAliveResponse>() {
+            @Override
+            public void onNext(LeaseKeepAliveResponse value) {
+
+            }
+
+            @Override
+            public void onError(Throwable t) {
+
+            }
+
+            @Override
+            public void onCompleted() {
+
+            }
+        });
+        return leaderKey;
+    }
+
+
+    public String leaderTimeout(String key, String member, long timeMilli) throws ExecutionException, InterruptedException, TimeoutException {
+        checkOrCreateLeaseId();
+        return this.electionClient.campaign(createByteSequence(key), leaseId, createByteSequence(member))
+                .get(timeMilli, TimeUnit.MILLISECONDS)
                 .getLeader()
                 .getName()
                 .toString();
@@ -271,8 +300,28 @@ public class EtcdClient implements LifeCycle {
 
     }
 
+    public boolean checkLeader(String key)  {
+        boolean existLeader = false;
+        try {
+            final String leaderKey = electionClient.leader(createByteSequence(key)).get().getKv().getKey().toString();
+
+            if (leaderKey != null) {
+                existLeader = true;
+            }
+        } catch (Exception e) {
+            if (e.getCause() instanceof NoLeaderException) {
+                logger.error("the [{}] does not exist as a leader", key);
+            }
+        }
+        return existLeader;
+    }
+
 
     private ByteSequence createByteSequence(String value) {
         return ByteSequence.from(value, StandardCharsets.UTF_8);
+    }
+
+    public EtcdConfig getConfig() {
+        return config;
     }
 }

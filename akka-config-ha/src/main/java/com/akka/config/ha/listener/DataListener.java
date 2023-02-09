@@ -6,7 +6,7 @@ import com.akka.config.ha.protocol.EtcdEvent;
 
 public interface DataListener {
 
-    void onEvent(EtcdEvent finalEtcdEvent);
+    void onEvent(EtcdEvent etcdEvent);
 
     void onException(Throwable throwable);
 }
