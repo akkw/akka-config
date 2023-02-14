@@ -20,4 +20,8 @@ public class PathUtils {
     public static String createLeaderPatch(final PathConfig haConfig, final String namespace) {
         return  haConfig.getLeaderPath() + namespace;
     }
+
+    public static String createEnvironmentPatch(final PathConfig haConfig, final String namespace, final String environment) {
+        return  haConfig.getMetadataPath() + namespace + "/environment/" + environment;
+    }
 }

@@ -34,7 +34,7 @@ public class AkkaSocketServerTest {
             @Override
             public Command processRequest(ChannelHandlerContext ctx, Command request) throws Exception {
                 System.out.println(request);
-                return Command.createResponseCommand(10, "server handler success");
+                return null;
             }
 
             @Override

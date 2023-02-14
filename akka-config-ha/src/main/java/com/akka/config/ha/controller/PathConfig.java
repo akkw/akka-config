@@ -6,9 +6,9 @@ public class PathConfig {
 
     private String rootPath = "/root/akka";
 
-    private String leader = "/leader";
+    private String leader = "/leader/";
 
-    private String metadata = "/metadata";
+    private String metadata = "/metadata/";
 
     private long electionTimeout = 5000;
 

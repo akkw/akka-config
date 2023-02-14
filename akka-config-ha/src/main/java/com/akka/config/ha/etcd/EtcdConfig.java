@@ -11,7 +11,7 @@ public class EtcdConfig {
 
     private long leaseLiveTimeout = 5;
 
-    private PathConfig pathConfig;
+    private PathConfig pathConfig = new PathConfig();
 
     public PathConfig getPathConfig() {
         return pathConfig;

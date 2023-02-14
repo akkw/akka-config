@@ -1,35 +1,46 @@
-package com.akka.config.protocol;/* 
+package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/8
  */
 
-import java.util.List;
+import java.util.Map;
 
 public class Metadata {
 
-    private List<AssignVersion> assignVersionList;
 
-    private String useVersion;
+    private Map<String, Metadata.ClientVersion> activateVersions;
+
+    private Map<String, Metadata.ClientVersion> verifyVersions;
+
+    private int globalVersion;
 
     private String namespace;
 
-    private String leaderIp;
+    private String environment;
 
-    private ConfigRemotePath configRemotePath;
+    private int maxVersion;
 
-    public List<AssignVersion> getAssignVersionList() {
-        return assignVersionList;
+    public Map<String, ClientVersion> getActivateVersions() {
+        return activateVersions;
     }
 
-    public void setAssignVersionList(List<AssignVersion> assignVersionList) {
-        this.assignVersionList = assignVersionList;
+    public void setActivateVersions(Map<String, ClientVersion> activateVersions) {
+        this.activateVersions = activateVersions;
     }
 
-    public String getUseVersion() {
-        return useVersion;
+    public Map<String, ClientVersion> getVerifyVersions() {
+        return verifyVersions;
     }
 
-    public void setUseVersion(String useVersion) {
-        this.useVersion = useVersion;
+    public void setVerifyVersions(Map<String, ClientVersion> verifyVersions) {
+        this.verifyVersions = verifyVersions;
+    }
+
+    public int getGlobalVersion() {
+        return globalVersion;
+    }
+
+    public void setGlobalVersion(int globalVersion) {
+        this.globalVersion = globalVersion;
     }
 
     public String getNamespace() {
@@ -40,25 +51,25 @@ public class Metadata {
         this.namespace = namespace;
     }
 
-    public String getLeaderIp() {
-        return leaderIp;
+    public String getEnvironment() {
+        return environment;
     }
 
-    public void setLeaderIp(String leaderIp) {
-        this.leaderIp = leaderIp;
+    public void setEnvironment(String environment) {
+        this.environment = environment;
     }
 
-    public ConfigRemotePath getConfigRemotePath() {
-        return configRemotePath;
+    public int getMaxVersion() {
+        return maxVersion;
     }
 
-    public void setConfigRemotePath(ConfigRemotePath configRemotePath) {
-        this.configRemotePath = configRemotePath;
+    public void setMaxVersion(int maxVersion) {
+        this.maxVersion = maxVersion;
     }
 
-    public static class AssignVersion {
+    public static class ClientVersion {
         private String client;
-        private String version;
+        private Integer version;
 
         public String getClient() {
             return client;
@@ -68,11 +79,11 @@ public class Metadata {
             this.client = client;
         }
 
-        public String getVersion() {
+        public Integer getVersion() {
             return version;
         }
 
-        public void setVersion(String version) {
+        public void setVersion(Integer version) {
             this.version = version;
         }
     }

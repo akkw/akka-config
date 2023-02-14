@@ -8,4 +8,7 @@ public interface Store {
     void write(String configId, int version, byte[] content);
 
     void delete(String configId, int version);
+
+    void rollback();
+
 }

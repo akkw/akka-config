@@ -1,13 +1,12 @@
-package com.akka.config.core;/* 
+package com.akka.config.server.core;/*
     create qiangzhiwei time 2023/2/8
  */
 
-import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.ha.etcd.EtcdConfig;
 import com.akka.config.ha.listener.DataListener;
 import com.akka.config.ha.protocol.EtcdEvent;
-import com.akka.config.protocol.MetadataEvent;
+import com.akka.config.server.protocol.MetadataEvent;
 import com.akka.tools.api.LifeCycle;
 import com.akka.tools.bus.AsyncEventBus;
 import com.akka.tools.bus.Event;
