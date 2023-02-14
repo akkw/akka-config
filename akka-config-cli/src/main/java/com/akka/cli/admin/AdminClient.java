@@ -4,7 +4,6 @@ package com.akka.cli.admin;/*
 
 public class AdminClient {
 
-
     private AdminNetworkClient adminNetworkClient;
 
 
