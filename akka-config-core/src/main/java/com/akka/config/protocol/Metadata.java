@@ -89,15 +89,15 @@ public class Metadata {
     }
 
     public static class ConfigRemotePath {
-        private String DBRemoteAddress;
+        private String dBRemoteAddress;
         private String cacheRemoteAddress;
 
         public String getDBRemoteAddress() {
-            return DBRemoteAddress;
+            return dBRemoteAddress;
         }
 
-        public void setDBRemoteAddress(String DBRemoteAddress) {
-            this.DBRemoteAddress = DBRemoteAddress;
+        public void setDBRemoteAddress(String dBRemoteAddress) {
+            this.dBRemoteAddress = dBRemoteAddress;
         }
 
         public String getCacheRemoteAddress() {

@@ -5,7 +5,7 @@ package com.akka.config.ha.etcd;/*
 import com.akka.config.ha.controller.PathConfig;
 
 public class EtcdConfig {
-    private String endpoints="http://127.0.0.1:2379";
+    private String endpoints = "http://127.0.0.1:2379";
 
     private long createLeaseIdTimeout = 5000;
 

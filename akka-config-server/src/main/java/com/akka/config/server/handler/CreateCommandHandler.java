@@ -2,7 +2,6 @@ package com.akka.config.server.handler;/*
     create qiangzhiwei time 2023/2/10
  */
 
-import com.akka.config.handler.CommandHandler;
 import com.akka.config.protocol.ActivateConfigResponse;
 import com.akka.config.protocol.CreateConfigRequest;
 import com.akka.config.protocol.Metadata;
@@ -34,7 +33,7 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         final Metadata metadata = metadataManager.getMetadata(namespace, environment);
 
         final int maxVersion = metadata.getMaxVersion();
-        // TODO 持久化配置
+        // TODO Persistence Config
 
         return CompletableFuture.completedFuture(new ActivateConfigResponse());
     }

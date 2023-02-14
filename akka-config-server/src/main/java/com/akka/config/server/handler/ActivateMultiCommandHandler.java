@@ -9,7 +9,7 @@ import com.akka.remoting.protocol.Command;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class ActivateMultiCommandHandler extends AbstractCommandHandler{
+public class ActivateMultiCommandHandler extends AbstractCommandHandler {
     public ActivateMultiCommandHandler(EtcdClient etcdClient) {
 
     }

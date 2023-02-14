@@ -7,9 +7,16 @@ package com.akka.config.ha.etcd;
 import com.akka.config.ha.listener.DataListener;
 import com.akka.config.ha.protocol.EtcdEvent;
 import com.akka.tools.api.LifeCycle;
-import io.etcd.jetcd.*;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.ClientBuilder;
+import io.etcd.jetcd.Election;
+import io.etcd.jetcd.KV;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Lease;
+import io.etcd.jetcd.Lock;
+import io.etcd.jetcd.Watch;
 import io.etcd.jetcd.election.NoLeaderException;
-import io.etcd.jetcd.election.NotLeaderException;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
 import io.etcd.jetcd.options.GetOption;
@@ -23,7 +30,11 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class EtcdClient implements LifeCycle {
 

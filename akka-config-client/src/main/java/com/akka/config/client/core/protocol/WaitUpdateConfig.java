@@ -2,8 +2,6 @@ package com.akka.config.client.core.protocol;/*
     create qiangzhiwei time 2023/2/12
  */
 
-import com.alibaba.fastjson.JSON;
-
 public class WaitUpdateConfig {
     private final Integer verifyVersion;
     private final Integer activateVersion;

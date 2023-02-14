@@ -2,15 +2,15 @@ package com.akka.config.server.handler;/*
     create qiangzhiwei time 2023/2/10
  */
 
-import com.akka.config.handler.CommandHandler;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.ActivateConfigResponse;
+import com.akka.config.protocol.DeleteConfigRequest;
+import com.akka.config.protocol.Metadata;
+import com.akka.config.protocol.Response;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
-import com.sun.xml.internal.ws.util.QNameMap;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class DeleteCommandHandler extends AbstractCommandHandler {

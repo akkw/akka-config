@@ -19,7 +19,7 @@ public class AdminClient {
         return false;
     }
 
-    public String readAllConfig(String namespace, String environment){
+    public String readAllConfig(String namespace, String environment) {
         return null;
     }
 

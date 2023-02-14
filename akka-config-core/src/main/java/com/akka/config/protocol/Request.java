@@ -2,8 +2,6 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/11
  */
 
-import java.util.List;
-
 public class Request {
     protected String namespace;
     protected String environment;
