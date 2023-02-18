@@ -1,4 +1,4 @@
-package com.akka.config.store.mysql;/* 
+package com.akka.config.store.mysql.utils;/*
     create qiangzhiwei time 2023/2/18
  */
 

@@ -21,7 +21,6 @@ import com.akka.config.server.handler.VerifyCommandHandler;
 import com.akka.config.server.handler.VerifyMultiCommandHandler;
 import com.akka.config.server.protocol.MetadataEvent;
 import com.akka.config.store.Store;
-import com.akka.config.store.mysql.MysqlUtils;
 import com.akka.remoting.netty.NettyRequestProcessor;
 import com.akka.remoting.netty.NettyServerConfig;
 import com.akka.remoting.protocol.Command;

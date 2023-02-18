@@ -1,5 +1,9 @@
-package com.akka.config.store.mysql;
+package com.akka.config.store.mysql.utils;
 
+import com.akka.config.store.mysql.utils.FillStatement;
+import com.akka.config.store.mysql.utils.MysqlUtils;
+import com.akka.config.store.mysql.utils.ResultFunction;
+import com.akka.config.store.mysql.utils.SqlFunction;
 import org.junit.Test;
 
 import javax.sql.rowset.serial.SerialBlob;
