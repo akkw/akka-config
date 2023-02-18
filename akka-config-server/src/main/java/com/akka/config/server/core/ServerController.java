@@ -21,6 +21,7 @@ import com.akka.config.server.handler.VerifyCommandHandler;
 import com.akka.config.server.handler.VerifyMultiCommandHandler;
 import com.akka.config.server.protocol.MetadataEvent;
 import com.akka.config.store.Store;
+import com.akka.config.store.mysql.MysqlStore;
 import com.akka.remoting.netty.NettyRequestProcessor;
 import com.akka.remoting.netty.NettyServerConfig;
 import com.akka.remoting.protocol.Command;
@@ -53,7 +54,7 @@ public class ServerController implements LifeCycle {
 
     private final EtcdConfig etcdConfig;
 
-    private  Store configStore;
+    private final Store configStore;
 
     private final ServerNetwork serverNetwork;
 
@@ -67,7 +68,7 @@ public class ServerController implements LifeCycle {
         this.leaderTimer = new Timer("CheckNamespaceLeaderThread");
         this.etcdDataListener = new EtcdDataListener(etcdClient, metadataBus);
         this.haController = new HaController(etcdClient, etcdConfig.getPathConfig());
-//        this.configStore = new MysqlUtils();
+        this.configStore = new MysqlStore();
         this.serverNetwork = new ServerNetwork(new NettyServerConfig());
     }
 
