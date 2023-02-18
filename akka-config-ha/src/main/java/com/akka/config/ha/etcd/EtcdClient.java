@@ -7,6 +7,7 @@ package com.akka.config.ha.etcd;
 import com.akka.config.ha.listener.DataListener;
 import com.akka.config.ha.protocol.EtcdEvent;
 import com.akka.tools.api.LifeCycle;
+import com.google.protobuf.ByteString;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.ClientBuilder;
@@ -16,10 +17,16 @@ import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lease;
 import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.Watch;
+import io.etcd.jetcd.api.Compare;
 import io.etcd.jetcd.election.NoLeaderException;
+import io.etcd.jetcd.kv.TxnResponse;
 import io.etcd.jetcd.lease.LeaseGrantResponse;
 import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
+import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.PutOption;
 import io.etcd.jetcd.watch.WatchEvent;
 import io.etcd.jetcd.watch.WatchResponse;
 import io.grpc.stub.StreamObserver;
@@ -61,9 +68,11 @@ public class EtcdClient implements LifeCycle {
 
     public EtcdClient(EtcdConfig config) {
         this.config = config;
-        this.clientBuilder = Client.builder().endpoints(config.getEndpoints().split(","));
+        this.clientBuilder = Client.builder()
+                .endpoints(config.getEndpoints().split(","))
+                .user(createByteSequence(config.getUsername()))
+                .password(createByteSequence(config.getPassword()));
     }
-
 
 
     @Override
@@ -124,7 +133,6 @@ public class EtcdClient implements LifeCycle {
         ByteSequence lockKey = createByteSequence(key);
         return lockClient.unlock(lockKey).get().toString();
     }
-
 
 
     public void watch(String key, DataListener listener, ExecutorService publishEventExecutor) {
@@ -235,6 +243,22 @@ public class EtcdClient implements LifeCycle {
     public void put(String key, String value) throws ExecutionException, InterruptedException {
         this.kvClient.put(createByteSequence(key), createByteSequence(value)).get();
     }
+    public void del(String key, String value) throws ExecutionException, InterruptedException {
+        this.kvClient.delete(createByteSequence(key)).get();
+    }
+    public boolean putIfAbsent(String key, String value) throws ExecutionException, InterruptedException {
+        final TxnResponse txnResponse = this.kvClient.txn()
+                .If(new Cmp(createByteSequence(key), Cmp.Op.EQUAL, new CmpTarget<Long>(Compare.CompareTarget.VERSION, 0L) {
+                    @Override
+                    public Compare.CompareTarget getTarget() {
+                        return Compare.CompareTarget.VERSION;
+                    }
+                }))
+                .Then(Op.PutOp.put(createByteSequence(key), createByteSequence(value), PutOption.DEFAULT))
+                .Else()
+                .commit().get();
+        return txnResponse.isSucceeded();
+    }
 
     public Pair<String, String> get(String key) throws ExecutionException, InterruptedException {
         if (kvClient != null) {
@@ -311,7 +335,7 @@ public class EtcdClient implements LifeCycle {
 
     }
 
-    public boolean checkLeader(String key)  {
+    public boolean checkLeader(String key) {
         boolean existLeader = false;
         try {
             final String leaderKey = electionClient.leader(createByteSequence(key)).get().getKv().getKey().toString();

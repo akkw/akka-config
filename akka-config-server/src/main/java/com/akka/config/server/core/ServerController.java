@@ -8,6 +8,7 @@ import com.akka.config.ha.etcd.EtcdConfig;
 import com.akka.config.handler.CommandHandler;
 import com.akka.config.protocol.CommandCode;
 import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.config.server.handler.ActivateCommandHandler;
 import com.akka.config.server.handler.ActivateMultiCommandHandler;
 import com.akka.config.server.handler.CreateCommandHandler;
@@ -20,13 +21,14 @@ import com.akka.config.server.handler.VerifyCommandHandler;
 import com.akka.config.server.handler.VerifyMultiCommandHandler;
 import com.akka.config.server.protocol.MetadataEvent;
 import com.akka.config.store.Store;
-import com.akka.config.store.mysql.MysqlStore;
+import com.akka.config.store.mysql.MysqlUtils;
 import com.akka.remoting.netty.NettyRequestProcessor;
 import com.akka.remoting.netty.NettyServerConfig;
 import com.akka.remoting.protocol.Command;
 import com.akka.tools.api.LifeCycle;
 import com.akka.tools.bus.AsyncEventBus;
 import com.akka.tools.bus.Event;
+import com.alibaba.fastjson.JSON;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,7 @@ public class ServerController implements LifeCycle {
 
     private final EtcdConfig etcdConfig;
 
-    private final Store configStore;
+    private  Store configStore;
 
     private final ServerNetwork serverNetwork;
 
@@ -66,7 +68,7 @@ public class ServerController implements LifeCycle {
         this.leaderTimer = new Timer("CheckNamespaceLeaderThread");
         this.etcdDataListener = new EtcdDataListener(etcdClient, metadataBus);
         this.haController = new HaController(etcdClient, etcdConfig.getPathConfig());
-        this.configStore = new MysqlStore();
+//        this.configStore = new MysqlUtils();
         this.serverNetwork = new ServerNetwork(new NettyServerConfig());
     }
 
@@ -115,10 +117,27 @@ public class ServerController implements LifeCycle {
         initHandler();
     }
 
-    private void writeResponse(Response response, Throwable t, Command command, ChannelHandlerContext ctx) {
-
+    private void writeResponse(Response response, Throwable t, Command reqCommand, ChannelHandlerContext ctx) {
+        Command respCommand = null;
+        try {
+            if (t != null) {
+                //the t should not be null, using error code instead
+                throw t;
+            } else {
+                respCommand = handleResponse(response, reqCommand);
+                respCommand.markResponseType();
+                ctx.writeAndFlush(respCommand);
+            }
+        } catch (Throwable e) {
+            logger.error("Process request over, but fire response failed, request:[{}] response:[{}]", reqCommand, response, e);
+        }
     }
-
+    public Command handleResponse(Response response, Command command) {
+        Command remotingCommand = Command.createResponseCommand(ResponseCode.SUCCESS.code(), null);
+        remotingCommand.setBody(JSON.toJSONBytes(response));
+        remotingCommand.setOpaque(command.getOpaque());
+        return remotingCommand;
+    }
 
     private void initHandler() {
         requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.configStore, metadataManager));

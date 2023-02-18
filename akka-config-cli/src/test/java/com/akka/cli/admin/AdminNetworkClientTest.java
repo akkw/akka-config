@@ -1,9 +1,12 @@
 package com.akka.cli.admin;
 
 import com.akka.config.client.core.ClientConfig;
+import com.akka.config.protocol.CreateConfigResponse;
+import com.akka.config.protocol.CreateNamespaceResponse;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
+import org.junit.Assert;
 import org.junit.Before;
 
 import java.util.HashMap;
@@ -21,12 +24,13 @@ import static org.junit.Assert.*;
     }
     @org.junit.Test
     public void createNamespace() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.createNamespace("akka-name", "dev");
+        final CreateNamespaceResponse response = client.createNamespace("akka-name", "dev");
+        Assert.assertEquals(response.getCode(), 200);
     }
 
     @org.junit.Test
     public void createConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.createConfig("akka-name", "dev","body");
+        final CreateConfigResponse response = client.createConfig("akka-name", "dev", "body");
     }
 
     @org.junit.Test

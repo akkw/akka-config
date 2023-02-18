@@ -4,13 +4,11 @@ package com.akka.config.server.handler;/*
 
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.CreateNamespaceRequest;
-import com.akka.config.protocol.CreateNamespaceResponse;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
+import com.akka.config.protocol.*;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +32,12 @@ public class CreateNamespaceHandler extends AbstractCommandHandler {
         metadata.setMaxVersion(-1);
         metadata.setActivateVersions(new HashMap<>());
         metadata.setVerifyVersions(new HashMap<>());
-        etcdClient.put(environmentPatch, JSON.toJSONString(metadata));
-        return CompletableFuture.completedFuture(new CreateNamespaceResponse());
+        final boolean createResult = etcdClient.putIfAbsent(environmentPatch, JSON.toJSONString(metadata));
+
+        final CreateNamespaceResponse createNamespaceResponse = createResult ? new CreateNamespaceResponse() :
+                new CreateNamespaceResponse(ResponseCode.NAMESPACE_EXIST.code(), ResponseCode.NAMESPACE_EXIST.getDesc().getBytes(StandardCharsets.UTF_8));
+
+        return CompletableFuture.completedFuture(createNamespaceResponse);
+
     }
 }

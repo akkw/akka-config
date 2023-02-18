@@ -3,34 +3,20 @@ package com.akka.config.protocol;/*
  */
 
 public class CreateConfigResponse extends Response {
-    private int serverVersion;
-    private int serverAddress;
-    private int configVersion;
+    private int version;
 
     public CreateConfigResponse() {
     }
 
-    public int getCode() {
-        return code;
+    public CreateConfigResponse(int code, byte[] error) {
+        super(code, error);
     }
 
-    public void setCode(int code) {
-        this.code = code;
+    public int getVersion() {
+        return version;
     }
 
-    public int getServerVersion() {
-        return serverVersion;
-    }
-
-    public void setServerVersion(int serverVersion) {
-        this.serverVersion = serverVersion;
-    }
-
-    public int getServerAddress() {
-        return serverAddress;
-    }
-
-    public void setServerAddress(int serverAddress) {
-        this.serverAddress = serverAddress;
+    public void setVersion(int version) {
+        this.version = version;
     }
 }

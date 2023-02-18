@@ -6,7 +6,9 @@ package com.akka.config.protocol;/*
     SUCCESS(200, ""),
     TIMEOUT(300, ""),
     METADATA_ERROR(301, ""),
-    NETWORK_ERROR(302, "");
+    NETWORK_ERROR(302, ""),
+    NAMESPACE_EXIST(303,"namespace already exists"),
+    CONFIG_CREATE_ERROR(304,"create config error");
 
 
     private final int code;

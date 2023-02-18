@@ -11,6 +11,25 @@ public class EtcdConfig {
 
     private long leaseLiveTimeout = 5;
 
+    private String username = "root";
+    private String password = "root";
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     private PathConfig pathConfig = new PathConfig();
 
     public PathConfig getPathConfig() {

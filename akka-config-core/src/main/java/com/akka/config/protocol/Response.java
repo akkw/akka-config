@@ -6,6 +6,15 @@ public class Response {
     protected int code = ResponseCode.SUCCESS.code();
     protected byte[] message;
 
+    public Response() {
+    }
+
+    public Response(int code) {
+        this.code = code;
+    }
+
+
+
     public byte[] getMessage() {
         return message;
     }
@@ -20,5 +29,10 @@ public class Response {
 
     public void setCode(int code) {
         this.code = code;
+    }
+
+    public Response(int code, byte[] message) {
+        this.code = code;
+        this.message = message;
     }
 }
