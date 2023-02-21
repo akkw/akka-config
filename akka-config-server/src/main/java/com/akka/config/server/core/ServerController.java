@@ -140,7 +140,7 @@ public class ServerController implements LifeCycle {
     }
 
     private void initHandler() {
-        requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.etcdClient, this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.DELETE, new DeleteCommandHandler(this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.READ, new ReadCommandHandler(this.configStore));
         requestHandlerMap.put(CommandCode.METADATA, new MetadataCommandHandler(etcdClient, metadataManager));

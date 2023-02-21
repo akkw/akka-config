@@ -3,11 +3,16 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.protocol.ReadConfigRequest;
+import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.config.store.Store;
+import com.akka.config.store.mysql.model.MysqlConfigModel;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 
 public class ReadCommandHandler extends AbstractCommandHandler {
@@ -24,8 +29,19 @@ public class ReadCommandHandler extends AbstractCommandHandler {
         final ReadConfigRequest readConfigRequest = JSON.parseObject(command.getBody(), ReadConfigRequest.class);
         final String namespace = readConfigRequest.getNamespace();
         final String environment = readConfigRequest.getEnvironment();
-
-        // TODO readConfig
-        return null;
+        final int version = readConfigRequest.getVersion();
+        final ReadConfigResponse readConfigResponse = new ReadConfigResponse();
+        try {
+            final MysqlConfigModel result = store.read(namespace, environment, version);
+            readConfigResponse.setBody(result.getContent());
+            readConfigResponse.setNamespace(result.getNamespace());
+            readConfigResponse.setEnvironment(result.getEnvironment());
+            readConfigResponse.setVersion(result.getVersion());
+        } catch (Exception e) {
+            fillResponse(readConfigResponse, ResponseCode.CONFIG_READ_ERROR);
+            return CompletableFuture.completedFuture(readConfigResponse);
+        }
+        fillResponse(readConfigResponse, ResponseCode.SUCCESS);
+        return CompletableFuture.completedFuture(readConfigResponse);
     }
 }

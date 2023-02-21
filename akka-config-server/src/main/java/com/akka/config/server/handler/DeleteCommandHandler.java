@@ -2,15 +2,14 @@ package com.akka.config.server.handler;/*
     create qiangzhiwei time 2023/2/10
  */
 
-import com.akka.config.protocol.ActivateConfigResponse;
-import com.akka.config.protocol.DeleteConfigRequest;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
+import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 
 public class DeleteCommandHandler extends AbstractCommandHandler {
@@ -33,11 +32,14 @@ public class DeleteCommandHandler extends AbstractCommandHandler {
         final String environment = deleteConfigRequest.getEnvironment();
         final int delVersion = deleteConfigRequest.getVersion();
 
-        final Metadata metadata = metadataManager.getMetadata(namespace, environment);
-        boolean canDel = true;
+        try {
+            this.store.delete(namespace, environment, delVersion);
+        } catch (SQLException e) {
+            return CompletableFuture.completedFuture(new DeleteConfigResponse(ResponseCode.CONFIG_DELETE_ERROR.code(),
+                    ResponseCode.CONFIG_DELETE_ERROR.getDesc().getBytes(StandardCharsets.UTF_8)));
+        }
 
 
-
-        return CompletableFuture.completedFuture(new ActivateConfigResponse(false));
+        return CompletableFuture.completedFuture(new DeleteConfigResponse(ResponseCode.SUCCESS.code()));
     }
 }

@@ -4,24 +4,7 @@ package com.akka.cli.admin;/*
 
 import com.akka.config.client.core.ClientConfig;
 import com.akka.config.client.core.ConfigNetworkClient;
-import com.akka.config.protocol.ActivateConfigRequest;
-import com.akka.config.protocol.ActivateConfigResponse;
-import com.akka.config.protocol.ActivateMultiConfigRequest;
-import com.akka.config.protocol.ActivateMultiConfigResponse;
-import com.akka.config.protocol.CommandCode;
-import com.akka.config.protocol.CreateConfigRequest;
-import com.akka.config.protocol.CreateConfigResponse;
-import com.akka.config.protocol.CreateNamespaceRequest;
-import com.akka.config.protocol.CreateNamespaceResponse;
-import com.akka.config.protocol.DeleteConfigRequest;
-import com.akka.config.protocol.DeleteConfigResponse;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.ReadAllConfigRequest;
-import com.akka.config.protocol.ReadAllConfigResponse;
-import com.akka.config.protocol.ReadConfigRequest;
-import com.akka.config.protocol.VerifyConfigRequest;
-import com.akka.config.protocol.VerifyConfigResponse;
-import com.akka.config.protocol.VerifyMultiConfigRequest;
+import com.akka.config.protocol.*;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
@@ -55,10 +38,10 @@ public class AdminNetworkClient extends ConfigNetworkClient {
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.DELETE), 3000);
         return JSON.parseObject(respCommand.getBody(), DeleteConfigResponse.class);
     }
-    public ReadAllConfigResponse readConfig(String namespace, String environment, Integer version) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+    public ReadConfigResponse readConfig(String namespace, String environment, Integer version) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final ReadConfigRequest request = new ReadConfigRequest(namespace, environment,version);
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.READ), 3000);
-        return JSON.parseObject(respCommand.getBody(), ReadAllConfigResponse.class);
+        return JSON.parseObject(respCommand.getBody(), ReadConfigResponse.class);
     }
     public ReadAllConfigResponse readAllConfig(String namespace, String environment) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final ReadAllConfigRequest request = new ReadAllConfigRequest(namespace, environment);

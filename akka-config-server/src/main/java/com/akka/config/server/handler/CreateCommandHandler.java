@@ -3,6 +3,7 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.common.PathUtils;
+import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
@@ -18,10 +19,13 @@ public class CreateCommandHandler extends AbstractCommandHandler {
 
     private final Store store;
     private final MetadataManager metadataManager;
-    public CreateCommandHandler(Store store, MetadataManager metadataManager) {
+    public CreateCommandHandler(EtcdClient etcdClient, Store store, MetadataManager metadataManager) {
+        super(etcdClient);
         this.store = store;
         this.metadataManager = metadataManager;
     }
+
+
 
 
     @Override
@@ -37,8 +41,9 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         final int maxVersion = metadata.getMaxVersion();
 
         try {
-            store.write(namespace, environment, maxVersion, body);
-            metadata.setMaxVersion(maxVersion + 1);
+            final int newVersion = maxVersion + 1;
+            store.write(namespace, environment, newVersion, body);
+            metadata.setMaxVersion(newVersion);
             etcdClient.put(environmentPatch, JSON.toJSONString(metadata));
         } catch (Exception e) {
             return CompletableFuture.completedFuture(new CreateConfigResponse(ResponseCode.CONFIG_CREATE_ERROR.code(),

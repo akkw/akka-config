@@ -8,7 +8,9 @@ package com.akka.config.protocol;/*
     METADATA_ERROR(301, ""),
     NETWORK_ERROR(302, ""),
     NAMESPACE_EXIST(303,"namespace already exists"),
-    CONFIG_CREATE_ERROR(304,"create config error");
+    CONFIG_CREATE_ERROR(304,"create config error"),
+    CONFIG_DELETE_ERROR(305,"delete config error"),
+    CONFIG_READ_ERROR(306,"read config error");
 
 
     private final int code;

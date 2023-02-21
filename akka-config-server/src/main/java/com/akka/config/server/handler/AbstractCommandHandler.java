@@ -15,6 +15,12 @@ abstract class AbstractCommandHandler implements CommandHandler {
 
     protected EtcdClient etcdClient;
 
+    public AbstractCommandHandler() {
+    }
+
+    public AbstractCommandHandler(EtcdClient etcdClient) {
+        this.etcdClient = etcdClient;
+    }
 
     protected Metadata getEtcdMetadata(String namespace, String environment) throws ExecutionException, InterruptedException {
         final Pair<String, String> metadataPair = etcdClient.get(

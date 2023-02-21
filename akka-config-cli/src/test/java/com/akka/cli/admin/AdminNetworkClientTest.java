@@ -3,6 +3,7 @@ package com.akka.cli.admin;
 import com.akka.config.client.core.ClientConfig;
 import com.akka.config.protocol.CreateConfigResponse;
 import com.akka.config.protocol.CreateNamespaceResponse;
+import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
@@ -40,7 +41,8 @@ import static org.junit.Assert.*;
 
     @org.junit.Test
     public void readConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.readConfig("akka-name", "dev", 0);
+        final ReadConfigResponse readResponse = client.readConfig("mysqlUtils-test", "dev", 6);
+        System.out.println(readResponse);
     }
 
 

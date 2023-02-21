@@ -1,16 +1,14 @@
-package com.akka.config.protocol;/* 
-    create qiangzhiwei time 2023/2/11
+package com.akka.config.store.mysql.model;/*
+    create qiangzhiwei time 2023/2/21
  */
 
 import java.util.Arrays;
 
-public class ReadConfigResponse extends Response {
-    private byte[] body;
+public class MysqlConfigModel {
     private String namespace;
     private String environment;
-    private int version;
-
-
+    private Integer version;
+    private byte[] content;
 
     public String getNamespace() {
         return namespace;
@@ -28,29 +26,29 @@ public class ReadConfigResponse extends Response {
         this.environment = environment;
     }
 
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 
-    public byte[] getBody() {
-        return body;
+    public byte[] getContent() {
+        return content;
     }
 
-    public void setBody(byte[] body) {
-        this.body = body;
+    public void setContent(byte[] content) {
+        this.content = content;
     }
 
     @Override
     public String toString() {
-        return "ReadConfigResponse{" +
-                "body=" + new String(body) +
-                ", namespace='" + namespace + '\'' +
+        return "MysqlConfigModel{" +
+                "namespace='" + namespace + '\'' +
                 ", environment='" + environment + '\'' +
                 ", version=" + version +
+                ", content=" + new String(content) +
                 '}';
     }
 }
