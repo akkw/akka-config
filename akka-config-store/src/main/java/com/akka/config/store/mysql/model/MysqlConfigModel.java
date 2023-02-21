@@ -2,7 +2,6 @@ package com.akka.config.store.mysql.model;/*
     create qiangzhiwei time 2023/2/21
  */
 
-import java.util.Arrays;
 
 public class MysqlConfigModel {
     private String namespace;

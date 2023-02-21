@@ -7,7 +7,6 @@ package com.akka.config.ha.etcd;
 import com.akka.config.ha.listener.DataListener;
 import com.akka.config.ha.protocol.EtcdEvent;
 import com.akka.tools.api.LifeCycle;
-import com.google.protobuf.ByteString;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
 import io.etcd.jetcd.ClientBuilder;

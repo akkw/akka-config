@@ -11,8 +11,6 @@ import com.akka.config.store.mysql.model.MysqlConfigModel;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
-import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 
 public class ReadCommandHandler extends AbstractCommandHandler {

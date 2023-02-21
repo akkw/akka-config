@@ -2,7 +2,6 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/13
  */
 
-import java.util.Arrays;
 
 public class CreateNamespaceResponse extends Response {
     public CreateNamespaceResponse() {
