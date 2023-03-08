@@ -3,6 +3,11 @@ package com.akka.config.protocol;/*
  */
 
 public class DeleteConfigResponse extends Response {
+
+
+    public DeleteConfigResponse() {
+    }
+
     public DeleteConfigResponse(int code) {
         super(code);
     }

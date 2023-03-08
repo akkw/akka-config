@@ -7,10 +7,11 @@ package com.akka.config.protocol;/*
     TIMEOUT(300, ""),
     METADATA_ERROR(301, ""),
     NETWORK_ERROR(302, ""),
-    NAMESPACE_EXIST(303,"namespace already exists"),
-    CONFIG_CREATE_ERROR(304,"create config error"),
-    CONFIG_DELETE_ERROR(305,"delete config error"),
-    CONFIG_READ_ERROR(306,"read config error");
+    NAMESPACE_EXIST(303,""),
+    CONFIG_CREATE_ERROR(304,""),
+    CONFIG_DELETE_ERROR(305,""),
+    CONFIG_READ_ERROR(306,""),
+    METADATA_NOT_EXIST(307,"");
 
 
     private final int code;

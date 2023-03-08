@@ -2,12 +2,12 @@ package com.akka.config.client.core.protocol;/*
     create qiangzhiwei time 2023/2/12
  */
 
-public class ClientMetadata {
+public class ConfigMetadata {
     private String serverIp;
     private String namespace;
     private String environment;
-    private  int verifyVersion;
-    private  int activateVersion;
+    private  Integer verifyVersion;
+    private  Integer activateVersion;
 
     public String getNamespace() {
         return namespace;
@@ -33,19 +33,19 @@ public class ClientMetadata {
         this.serverIp = serverIp;
     }
 
-    public int getVerifyVersion() {
+    public Integer getVerifyVersion() {
         return verifyVersion;
     }
 
-    public void setVerifyVersion(int verifyVersion) {
+    public void setVerifyVersion(Integer verifyVersion) {
         this.verifyVersion = verifyVersion;
     }
 
-    public int getActivateVersion() {
+    public Integer getActivateVersion() {
         return activateVersion;
     }
 
-    public void setActivateVersion(int activateVersion) {
+    public void setActivateVersion(Integer activateVersion) {
         this.activateVersion = activateVersion;
     }
 }

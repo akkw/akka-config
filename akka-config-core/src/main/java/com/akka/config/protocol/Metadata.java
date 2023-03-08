@@ -2,16 +2,20 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/8
  */
 
-import java.util.Map;
+import com.google.common.base.Objects;
+
+import java.util.Set;
 
 public class Metadata {
 
 
-    private Map<String, Metadata.ClientVersion> activateVersions;
+    private Set<Metadata.ClientVersion> activateVersions;
 
-    private Map<String, Metadata.ClientVersion> verifyVersions;
+    private Set<Metadata.ClientVersion> verifyVersions;
 
     private int globalVersion;
+
+    private int verifyVersion;
 
     private String namespace;
 
@@ -19,19 +23,27 @@ public class Metadata {
 
     private int maxVersion;
 
-    public Map<String, ClientVersion> getActivateVersions() {
+    public int getVerifyVersion() {
+        return verifyVersion;
+    }
+
+    public void setVerifyVersion(int verifyVersion) {
+        this.verifyVersion = verifyVersion;
+    }
+
+    public Set<ClientVersion> getActivateVersions() {
         return activateVersions;
     }
 
-    public void setActivateVersions(Map<String, ClientVersion> activateVersions) {
+    public void setActivateVersions(Set<Metadata.ClientVersion> activateVersions) {
         this.activateVersions = activateVersions;
     }
 
-    public Map<String, ClientVersion> getVerifyVersions() {
+    public Set<Metadata.ClientVersion> getVerifyVersions() {
         return verifyVersions;
     }
 
-    public void setVerifyVersions(Map<String, ClientVersion> verifyVersions) {
+    public void setVerifyVersions(Set<Metadata.ClientVersion> verifyVersions) {
         this.verifyVersions = verifyVersions;
     }
 
@@ -85,6 +97,20 @@ public class Metadata {
 
         public void setVersion(Integer version) {
             this.version = version;
+        }
+
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ClientVersion that = (ClientVersion) o;
+            return Objects.equal(client, that.client);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(client);
         }
     }
 

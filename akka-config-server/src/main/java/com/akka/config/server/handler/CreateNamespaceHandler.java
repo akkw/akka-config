@@ -13,7 +13,7 @@ import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -34,8 +34,8 @@ public class CreateNamespaceHandler extends AbstractCommandHandler {
         metadata.setEnvironment(environment);
         metadata.setGlobalVersion(-1);
         metadata.setMaxVersion(-1);
-        metadata.setActivateVersions(new HashMap<>());
-        metadata.setVerifyVersions(new HashMap<>());
+        metadata.setActivateVersions(new HashSet<>());
+        metadata.setVerifyVersions(new HashSet<>());
         final boolean createResult = etcdClient.putIfAbsent(environmentPatch, JSON.toJSONString(metadata));
 
         final CreateNamespaceResponse createNamespaceResponse = createResult ? new CreateNamespaceResponse() :

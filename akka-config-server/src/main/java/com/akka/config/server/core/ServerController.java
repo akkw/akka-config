@@ -15,7 +15,7 @@ import com.akka.config.server.handler.CreateCommandHandler;
 import com.akka.config.server.handler.CreateNamespaceHandler;
 import com.akka.config.server.handler.DeleteCommandHandler;
 import com.akka.config.server.handler.MetadataCommandHandler;
-import com.akka.config.server.handler.ReadAllCommandHandler;
+import com.akka.config.server.handler.MultiReadCommandHandler;
 import com.akka.config.server.handler.ReadCommandHandler;
 import com.akka.config.server.handler.VerifyCommandHandler;
 import com.akka.config.server.handler.VerifyMultiCommandHandler;
@@ -141,15 +141,15 @@ public class ServerController implements LifeCycle {
 
     private void initHandler() {
         requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.etcdClient, this.configStore, metadataManager));
-        requestHandlerMap.put(CommandCode.DELETE, new DeleteCommandHandler(this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.DELETE, new DeleteCommandHandler(this.etcdClient, this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.READ, new ReadCommandHandler(this.configStore));
         requestHandlerMap.put(CommandCode.METADATA, new MetadataCommandHandler(etcdClient, metadataManager));
-        requestHandlerMap.put(CommandCode.ACTIVATE, new ActivateCommandHandler(this.configStore, metadataManager));
-        requestHandlerMap.put(CommandCode.VERIFY, new VerifyCommandHandler(this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.ACTIVATE, new ActivateCommandHandler(this.etcdClient, this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.VERIFY, new VerifyCommandHandler(this. etcdClient, this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.CREATE_NAMESPACE, new CreateNamespaceHandler(this.etcdClient));
         requestHandlerMap.put(CommandCode.ACTIVATE_MULTI, new ActivateMultiCommandHandler(this.etcdClient));
         requestHandlerMap.put(CommandCode.VERIFY_MULTI_CONFIG, new VerifyMultiCommandHandler(this.etcdClient));
-        requestHandlerMap.put(CommandCode.READ_ALL_CONFIG, new ReadAllCommandHandler(this.etcdClient));
+        requestHandlerMap.put(CommandCode.READ_ALL_CONFIG, new MultiReadCommandHandler(this.etcdClient, this.configStore));
     }
 
 

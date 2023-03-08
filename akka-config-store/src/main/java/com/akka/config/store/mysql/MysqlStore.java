@@ -48,10 +48,27 @@ public class MysqlStore implements Store {
         data.put(3, version);
         final ArrayList<String> excludeColumnList = new ArrayList<>();
         excludeColumnList.add("id");
-        final List<MysqlConfigModel> mysqlConfigModels = MysqlUtils.mysqlSelect(data, () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
+        final List<MysqlConfigModel> mysqlConfigModels = MysqlUtils.mysqlSelect(data,
+                () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
                 MysqlConfigModel.class, excludeColumnList);
 
         return mysqlConfigModels.get(0);
+    }
+
+    @Override
+    public List<MysqlConfigModel> multiRead(String namespace, String environment, int minVersion, int maxVersion) throws SQLException, NoSuchFieldException, InstantiationException, IllegalAccessException {
+        Map<Integer, Object> data = new HashMap<>();
+        data.put(1, namespace);
+        data.put(2, environment);
+        data.put(3, minVersion);
+        data.put(4, maxVersion);
+        final ArrayList<String> excludeColumnList = new ArrayList<>();
+        excludeColumnList.add("id");
+        final List<MysqlConfigModel> mysqlConfigModelList = MysqlUtils.mysqlSelect(data,
+                () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version >= ? and version <= ?",
+                MysqlConfigModel.class, excludeColumnList);
+
+        return mysqlConfigModelList;
     }
 
     @Override

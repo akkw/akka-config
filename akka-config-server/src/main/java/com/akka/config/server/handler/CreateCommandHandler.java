@@ -31,7 +31,7 @@ public class CreateCommandHandler extends AbstractCommandHandler {
 
 
 
-
+    // TODO 验证数据库是否存在这个版本
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final CreateConfigRequest createConfigRequest = JSON.parseObject(command.getBody(), CreateConfigRequest.class);
@@ -40,8 +40,8 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         final String namespace = createConfigRequest.getNamespace();
         final String environment = createConfigRequest.getEnvironment();
         final String environmentPatch = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
-        final Pair<String, String> etcdRes = etcdClient.get(environmentPatch);
-        final Metadata metadata = JSON.parseObject(etcdRes.getValue(), Metadata.class);
+        final Pair<String, String> etcdMetadata = etcdClient.get(environmentPatch);
+        final Metadata metadata = JSON.parseObject(etcdMetadata.getValue(), Metadata.class);
         final int maxVersion = metadata.getMaxVersion();
 
         try {

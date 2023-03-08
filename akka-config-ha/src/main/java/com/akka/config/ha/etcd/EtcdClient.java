@@ -242,9 +242,11 @@ public class EtcdClient implements LifeCycle {
     public void put(String key, String value) throws ExecutionException, InterruptedException {
         this.kvClient.put(createByteSequence(key), createByteSequence(value)).get();
     }
+
     public void del(String key, String value) throws ExecutionException, InterruptedException {
         this.kvClient.delete(createByteSequence(key)).get();
     }
+
     public boolean putIfAbsent(String key, String value) throws ExecutionException, InterruptedException {
         final TxnResponse txnResponse = this.kvClient.txn()
                 .If(new Cmp(createByteSequence(key), Cmp.Op.EQUAL, new CmpTarget<Long>(Compare.CompareTarget.VERSION, 0L) {
@@ -263,7 +265,9 @@ public class EtcdClient implements LifeCycle {
         if (kvClient != null) {
             final GetOption getOption = GetOption.newBuilder().isPrefix(false).build();
             final List<KeyValue> kvs = this.kvClient.get(createByteSequence(key), getOption).get().getKvs();
-            return new Pair<>(kvs.get(0).getKey().toString(), kvs.get(0).getValue().toString());
+            if (kvs != null && kvs.size() != 0) {
+                return new Pair<>(kvs.get(0).getKey().toString(), kvs.get(0).getValue().toString());
+            }
         }
         return null;
     }

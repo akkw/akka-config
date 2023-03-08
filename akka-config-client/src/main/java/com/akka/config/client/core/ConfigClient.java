@@ -4,9 +4,11 @@ package com.akka.config.client.core;/*
 
 import com.akka.config.api.Client;
 import com.akka.config.api.ConfigWatch;
-import com.akka.config.client.core.protocol.ClientMetadata;
+import com.akka.config.api.core.Config;
+import com.akka.config.client.core.protocol.ConfigMetadata;
 import com.akka.config.client.core.protocol.WaitUpdateConfig;
 import com.akka.config.protocol.MetadataResponse;
+import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.config.protocol.ResponseCode;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
@@ -14,11 +16,7 @@ import com.akka.remoting.exception.RemotingTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigClient implements Client {
@@ -31,7 +29,7 @@ public class ConfigClient implements Client {
 
     private volatile boolean isRun;
 
-    private final Map<String, Map<String, ClientMetadata>> metadataMap = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, ConfigMetadata>> metadataMap = new ConcurrentHashMap<>();
 
     private final Map<String, Map<String, ConfigWatch>> watchs = new ConcurrentHashMap();
 
@@ -49,7 +47,8 @@ public class ConfigClient implements Client {
 
     @Override
     public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+        this.networkClient.start();
+        this.timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 updateAndCompareMetadataAll();
@@ -58,21 +57,65 @@ public class ConfigClient implements Client {
 
             }
         }, 0, 3000);
+        this.isRun = true;
     }
 
     private void updateDataConfig() {
         if (!waitUpdateConfigList.isEmpty()) {
 
             for (final WaitUpdateConfig waitUpdateConfig : waitUpdateConfigList) {
+
                 final String namespace = waitUpdateConfig.getNamespace();
                 final String environment = waitUpdateConfig.getEnvironment();
+
+                final Integer verifyVersion = waitUpdateConfig.getVerifyVersion();
+                final Integer activateVersion = waitUpdateConfig.getActivateVersion();
+
+
+                final Map<String, ConfigMetadata> namespaceMap = metadataMap.get(namespace);
+
+                ConfigMetadata configMetadata = null;
+                if (namespaceMap != null) {
+                    configMetadata = namespaceMap.get(environment);
+                }
+
+                try {
+                    if (configMetadata == null || !Objects.equals(activateVersion, configMetadata.getActivateVersion())) {
+
+                        final ReadConfigResponse readConfigResp = networkClient.readConfig(namespace, environment, activateVersion);
+
+                        final ConfigWatch configWatch = watchs.get(namespace).get(environment);
+                        Config config = new Config(readConfigResp.getBody(), readConfigResp.getNamespace(),
+                                readConfigResp.getEnvironment(), readConfigResp.getVersion());
+                        configWatch.activate(config);
+                        saveVersion(namespace, environment, activateVersion, true);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                try {
+                    if (configMetadata == null ||  !Objects.equals(verifyVersion, configMetadata.getVerifyVersion())) {
+                        final ReadConfigResponse readConfigResp = networkClient.readConfig(namespace, environment, verifyVersion);
+
+                        final ConfigWatch configWatch = watchs.get(namespace).get(environment);
+                        Config config = new Config(readConfigResp.getBody(), readConfigResp.getNamespace(),
+                                readConfigResp.getEnvironment(), readConfigResp.getVersion());
+                        configWatch.verify(config);
+                        saveVersion(namespace, environment, activateVersion, false);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
 
 
             }
         }
 
 
+    }
 
+    private void saveVersion(String namespace, String environment, Integer activateVersion, boolean activate) {
 
     }
 
@@ -87,10 +130,11 @@ public class ConfigClient implements Client {
             throw new RuntimeException("configClient isRun: " + isRun);
         }
 
-        final Map<String, ConfigWatch> watchMap = watchs.computeIfAbsent(namespace, (k) -> {
-            return new ConcurrentHashMap<>();
-        });
-        watchMap.put(namespace, configWatch);
+        final Map<String, ConfigWatch> watchMap = watchs.computeIfAbsent(namespace, (k) -> new ConcurrentHashMap<>());
+        watchMap.put(environment, configWatch);
+        final Map<String, ConfigMetadata> metadataMapEvn = metadataMap.computeIfAbsent(namespace, (k) -> new ConcurrentHashMap<>());
+        metadataMapEvn.put(environment, new ConfigMetadata());
+
     }
 
 
@@ -111,23 +155,27 @@ public class ConfigClient implements Client {
     private void updateAndCompareMetadata(String namespace, String environment) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final MetadataResponse metadataResp = networkClient.metadata(namespace, environment);
         if (metadataResp.getCode() == ResponseCode.SUCCESS.code()) {
-            Map<String, ClientMetadata> namespaceMap = metadataMap.get(namespace);
-            if (namespaceMap == null) {
-                namespaceMap = new ConcurrentHashMap<>();
-            } else {
-                final ClientMetadata clientMetadata = namespaceMap.get(environment);
-                if (clientMetadata.getVerifyVersion() != metadataResp.getVerifyVersion() ||
-                        clientMetadata.getActivateVersion() != metadataResp.getActivateVersion()) {
-                    waitUpdateConfigList.add(new WaitUpdateConfig(metadataResp.getVerifyVersion(), metadataResp.getActivateVersion(), namespace, environment));
-                }
-            }
-            final ClientMetadata clientMetadata = new ClientMetadata();
-            clientMetadata.setNamespace(metadataResp.getNamespace());
-            clientMetadata.setEnvironment(metadataResp.getEnvironment());
-            clientMetadata.setVerifyVersion(metadataResp.getVerifyVersion());
-            clientMetadata.setActivateVersion(metadataResp.getActivateVersion());
-            namespaceMap.put(environment, clientMetadata);
 
+            Map<String, ConfigMetadata> namespaceMap = metadataMap.get(namespace);
+            if (namespaceMap != null) {
+                final ConfigMetadata clientMetadata = namespaceMap.get(environment);
+
+                if (clientMetadata == null) {
+                    return;
+                }
+
+                if (!Objects.equals(clientMetadata.getVerifyVersion(),metadataResp.getVerifyVersion())) {
+                    waitUpdateConfigList.add(new WaitUpdateConfig(metadataResp.getVerifyVersion(), null, namespace, environment));
+                }
+                if (!Objects.equals(clientMetadata.getActivateVersion(),metadataResp.getActivateVersion())) {
+                    waitUpdateConfigList.add(new WaitUpdateConfig(null, metadataResp.getActivateVersion(), namespace, environment));
+                }
+                if (!Objects.equals(clientMetadata.getActivateVersion(),metadataResp.getGlobalVersion())) {
+                    waitUpdateConfigList.add(new WaitUpdateConfig(null, metadataResp.getGlobalVersion(), namespace, environment));
+                }
+
+
+            }
         } else {
             throw new RuntimeException(new String(metadataResp.getMessage()));
         }

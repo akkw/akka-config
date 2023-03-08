@@ -2,25 +2,27 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/11
  */
 
-import java.util.Map;
+import java.util.List;
+
 
 public class ActivateConfigRequest extends Request {
 
-    private Map<String, Metadata.ClientVersion> activateVersionList;
+    private List<Metadata.ClientVersion> activateVersionList;
     private String clientIp;
 
-    public ActivateConfigRequest(String namespace, String environment, Integer version, String clientIp) {
+    public ActivateConfigRequest(String namespace, String environment, Integer version, String clientIp, List<Metadata.ClientVersion> activateVersionList) {
         this.namespace = namespace;
         this.environment = environment;
         this.version = version;
         this.clientIp = clientIp;
+        this.activateVersionList = activateVersionList;
     }
 
-    public Map<String, Metadata.ClientVersion> getActivateVersionList() {
+    public List<Metadata.ClientVersion> getActivateVersionList() {
         return activateVersionList;
     }
 
-    public void setActivateVersionList(Map<String, Metadata.ClientVersion> activateVersionList) {
+    public void setActivateVersionList(List<Metadata.ClientVersion> activateVersionList) {
         this.activateVersionList = activateVersionList;
     }
 

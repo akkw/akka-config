@@ -3,12 +3,11 @@ package com.akka.config.protocol;/*
  */
 
 public class ActivateConfigResponse extends Response {
-    boolean deleted;
 
-    public ActivateConfigResponse() {
+    public ActivateConfigResponse(int code, byte[] message) {
+        super(code, message);
     }
 
-    public ActivateConfigResponse(boolean deleted) {
-        this.deleted = deleted;
+    public ActivateConfigResponse() {
     }
 }

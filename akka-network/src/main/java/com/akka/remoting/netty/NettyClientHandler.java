@@ -4,9 +4,11 @@ package com.akka.remoting.netty;/*
 
 import com.akka.remoting.CommandReceived;
 import com.akka.remoting.protocol.Command;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+@ChannelHandler.Sharable
 public class NettyClientHandler extends SimpleChannelInboundHandler<Command> {
     private final CommandReceived commandReceived;
 

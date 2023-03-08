@@ -16,8 +16,8 @@ import com.akka.config.protocol.CreateNamespaceResponse;
 import com.akka.config.protocol.DeleteConfigRequest;
 import com.akka.config.protocol.DeleteConfigResponse;
 import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.ReadAllConfigRequest;
-import com.akka.config.protocol.ReadAllConfigResponse;
+import com.akka.config.protocol.MultiReadConfigRequest;
+import com.akka.config.protocol.MutliReadConfigResponse;
 import com.akka.config.protocol.ReadConfigRequest;
 import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.config.protocol.VerifyConfigRequest;
@@ -30,6 +30,7 @@ import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 public class AdminNetworkClient extends ConfigNetworkClient {
@@ -56,25 +57,21 @@ public class AdminNetworkClient extends ConfigNetworkClient {
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.DELETE), 3000);
         return JSON.parseObject(respCommand.getBody(), DeleteConfigResponse.class);
     }
-    public ReadConfigResponse readConfig(String namespace, String environment, Integer version) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final ReadConfigRequest request = new ReadConfigRequest(namespace, environment,version);
-        final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.READ), 3000);
-        return JSON.parseObject(respCommand.getBody(), ReadConfigResponse.class);
-    }
-    public ReadAllConfigResponse readAllConfig(String namespace, String environment) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final ReadAllConfigRequest request = new ReadAllConfigRequest(namespace, environment);
+
+    public MutliReadConfigResponse readAllConfig(String namespace, String environment, int minVersion, int maxVersion) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+        final MultiReadConfigRequest request = new MultiReadConfigRequest(namespace, environment, minVersion, maxVersion);
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.READ_ALL_CONFIG), 3000);
-        return JSON.parseObject(respCommand.getBody(), ReadAllConfigResponse.class);
+        return JSON.parseObject(respCommand.getBody(), MutliReadConfigResponse.class);
     }
 
-    public ActivateConfigResponse activateConfig(String namespace, String environment, Integer version, String clientIp) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final ActivateConfigRequest request = new ActivateConfigRequest(namespace, environment,version, clientIp);
+    public ActivateConfigResponse activateConfig(String namespace, String environment, Integer version, String clientIp, List<Metadata.ClientVersion> activateVersionList) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+        final ActivateConfigRequest request = new ActivateConfigRequest(namespace, environment,version, clientIp, activateVersionList);
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.ACTIVATE), 3000);
         return JSON.parseObject(respCommand.getBody(), ActivateConfigResponse.class);
     }
 
-    public VerifyConfigResponse verifyConfig(String namespace, String environment, Integer version, String clientIp) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final VerifyConfigRequest request = new VerifyConfigRequest(namespace, environment,version, clientIp);
+    public VerifyConfigResponse verifyConfig(String namespace, String environment, Integer version, String clientIp, List<Metadata.ClientVersion> verifyVersionList) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+        final VerifyConfigRequest request = new VerifyConfigRequest(namespace, environment,version, clientIp, verifyVersionList);
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request,CommandCode.VERIFY), 3000);
         return JSON.parseObject(respCommand.getBody(), VerifyConfigResponse.class);
     }

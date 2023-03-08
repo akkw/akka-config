@@ -3,28 +3,26 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.MetadataRequest;
-import com.akka.config.protocol.MetadataResponse;
-import com.akka.config.protocol.Response;
+import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class MetadataCommandHandler extends AbstractCommandHandler {
 
-    private final EtcdClient etcdClient;
     private final MetadataManager metadataManager;
 
     public MetadataCommandHandler(EtcdClient etcdClient, MetadataManager metadataManager) {
-        this.etcdClient = etcdClient;
+        super(etcdClient);
         this.metadataManager = metadataManager;
     }
 
-
+    // TODO 验证数据库是否存在这个版本
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final MetadataRequest metadataRequest = JSON.parseObject(command.getBody(), MetadataRequest.class);
@@ -33,11 +31,19 @@ public class MetadataCommandHandler extends AbstractCommandHandler {
         final Metadata etcdMetadata = getEtcdMetadata(namespace, environment);
 
         final MetadataResponse metadataResponse = new MetadataResponse();
-        final Metadata.ClientVersion activateVersion = etcdMetadata.getActivateVersions().get(metadataRequest.getClientIp());
+
+        if (etcdMetadata == null) {
+            fillResponse(metadataResponse, ResponseCode.METADATA_NOT_EXIST);
+            return CompletableFuture.completedFuture(metadataResponse);
+        }
+
+        final Metadata.ClientVersion activateVersion = etcdMetadata.getActivateVersions().
+                stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity())).get(metadataRequest.getClientIp());
         if (activateVersion != null) {
             metadataResponse.setActivateVersion(activateVersion.getVersion());
         }
-        final Metadata.ClientVersion verifyVersion = etcdMetadata.getVerifyVersions().get(metadataRequest.getClientIp());
+        final Metadata.ClientVersion verifyVersion = etcdMetadata.getVerifyVersions().
+                stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity())).get(metadataRequest.getClientIp());
         if (verifyVersion != null) {
             metadataResponse.setVerifyVersion(verifyVersion.getVersion());
         }

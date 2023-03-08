@@ -25,6 +25,6 @@ abstract class AbstractCommandHandler implements CommandHandler {
     protected Metadata getEtcdMetadata(String namespace, String environment) throws ExecutionException, InterruptedException {
         final Pair<String, String> metadataPair = etcdClient.get(
                 PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment));
-        return JSON.parseObject(metadataPair.getValue(), Metadata.class);
+        return JSON.parseObject(metadataPair != null ? metadataPair.getValue() : null, Metadata.class);
     }
 }
