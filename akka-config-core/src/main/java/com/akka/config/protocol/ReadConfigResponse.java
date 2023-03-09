@@ -7,7 +7,7 @@ public class ReadConfigResponse extends Response {
     private byte[] body;
     private String namespace;
     private String environment;
-    private int version;
+    private Integer version;
 
 
 
@@ -27,11 +27,11 @@ public class ReadConfigResponse extends Response {
         this.environment = environment;
     }
 
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 

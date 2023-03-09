@@ -25,10 +25,11 @@ public class ConfigNetworkClient implements LifeCycle {
     }
 
 
-    public MetadataResponse metadata(String namespace, String environment) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
+    public MetadataResponse metadata(String namespace, String environment, String clientIp) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         MetadataRequest request = new MetadataRequest();
         request.setNamespace(namespace);
         request.setEnvironment(environment);
+        request.setClientIp(clientIp);
         final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.METADATA), 3000);
         return JSON.parseObject(respCommand.getBody(), MetadataResponse.class);
     }

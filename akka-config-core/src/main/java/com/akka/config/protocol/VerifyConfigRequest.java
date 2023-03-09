@@ -8,6 +8,10 @@ import java.util.Map;
 public class VerifyConfigRequest extends Request {
     private List<Metadata.ClientVersion> verifyVersionList;
     private String clientIp;
+
+    public VerifyConfigRequest() {
+    }
+
     public VerifyConfigRequest(String namespace, String environment, Integer version, String clientIp, List<Metadata.ClientVersion> verifyVersionList) {
         this.namespace = namespace;
         this.environment = environment;

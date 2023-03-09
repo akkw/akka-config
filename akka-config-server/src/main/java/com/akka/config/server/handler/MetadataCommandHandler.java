@@ -5,6 +5,8 @@ package com.akka.config.server.handler;/*
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
+import com.akka.config.store.Store;
+import com.akka.config.store.mysql.MysqlStore;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
@@ -37,19 +39,30 @@ public class MetadataCommandHandler extends AbstractCommandHandler {
             return CompletableFuture.completedFuture(metadataResponse);
         }
 
-        final Metadata.ClientVersion activateVersion = etcdMetadata.getActivateVersions().
+        final Metadata.ClientVersion clientActivateVersion = etcdMetadata.getActivateVersions().
                 stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity())).get(metadataRequest.getClientIp());
-        if (activateVersion != null) {
-            metadataResponse.setActivateVersion(activateVersion.getVersion());
+        if (clientActivateVersion != null) {
+            metadataResponse.setActivateVersion(clientActivateVersion.getVersion());
+        } else {
+            metadataResponse.setActivateVersion(etcdMetadata.getGlobalVersion());
         }
-        final Metadata.ClientVersion verifyVersion = etcdMetadata.getVerifyVersions().
+        final Metadata.ClientVersion clientVerifyVersion = etcdMetadata.getVerifyVersions().
                 stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity())).get(metadataRequest.getClientIp());
-        if (verifyVersion != null) {
-            metadataResponse.setVerifyVersion(verifyVersion.getVersion());
+
+
+        if (clientVerifyVersion != null) {
+            metadataResponse.setVerifyVersion(clientVerifyVersion.getVersion());
+        } else if (etcdMetadata.getVerifyVersion() != null){
+            metadataResponse.setVerifyVersion(etcdMetadata.getVerifyVersion());
+        } else {
+            if (clientActivateVersion != null) {
+                metadataResponse.setVerifyVersion(clientActivateVersion.getVersion());
+            } else {
+                metadataResponse.setVerifyVersion(etcdMetadata.getGlobalVersion());
+            }
         }
         metadataResponse.setNamespace(namespace);
         metadataResponse.setEnvironment(environment);
-        metadataResponse.setGlobalVersion(etcdMetadata.getGlobalVersion());
         return CompletableFuture.completedFuture(metadataResponse);
     }
 }

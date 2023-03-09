@@ -7,7 +7,6 @@ public class MetadataResponse extends Response {
     private String environment;
     private Integer verifyVersion;
     private Integer activateVersion;
-    private int globalVersion;
 
 
     public Integer getVerifyVersion() {
@@ -40,14 +39,6 @@ public class MetadataResponse extends Response {
 
     public void setEnvironment(String environment) {
         this.environment = environment;
-    }
-
-    public int getGlobalVersion() {
-        return globalVersion;
-    }
-
-    public void setGlobalVersion(int globalVersion) {
-        this.globalVersion = globalVersion;
     }
 
 

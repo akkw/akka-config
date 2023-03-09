@@ -27,14 +27,19 @@ public class ReadCommandHandler extends AbstractCommandHandler {
         final ReadConfigRequest readConfigRequest = JSON.parseObject(command.getBody(), ReadConfigRequest.class);
         final String namespace = readConfigRequest.getNamespace();
         final String environment = readConfigRequest.getEnvironment();
-        final int version = readConfigRequest.getVersion();
+        final Integer version = readConfigRequest.getVersion();
         final ReadConfigResponse readConfigResponse = new ReadConfigResponse();
         try {
             final MysqlConfigModel result = store.read(namespace, environment, version);
-            readConfigResponse.setBody(result.getContent());
-            readConfigResponse.setNamespace(result.getNamespace());
-            readConfigResponse.setEnvironment(result.getEnvironment());
-            readConfigResponse.setVersion(result.getVersion());
+            if (result != null) {
+                readConfigResponse.setBody(result.getContent());
+                readConfigResponse.setNamespace(result.getNamespace());
+                readConfigResponse.setEnvironment(result.getEnvironment());
+                readConfigResponse.setVersion(result.getVersion());
+            } else {
+                fillResponse(readConfigResponse, ResponseCode.CONFIG_NOT_EXIST);
+                return CompletableFuture.completedFuture(readConfigResponse);
+            }
         } catch (Exception e) {
             fillResponse(readConfigResponse, ResponseCode.CONFIG_READ_ERROR);
             return CompletableFuture.completedFuture(readConfigResponse);

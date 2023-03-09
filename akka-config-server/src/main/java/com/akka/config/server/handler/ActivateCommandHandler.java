@@ -39,7 +39,7 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
         final ActivateConfigRequest request = JSON.parseObject(command.getBody(), ActivateConfigRequest.class);
         final String namespace = request.getNamespace();
         final String environment = request.getEnvironment();
-        final int version = request.getVersion();
+        final Integer version = request.getVersion();
         final List<Metadata.ClientVersion> activateVersionList = request.getActivateVersionList();
         final String etcdEnvMetadataPath = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
 
@@ -63,19 +63,25 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
 
     private ActivateConfigResponse checkMetadataNoPass(Metadata metadata, ActivateConfigRequest request) {
         final int maxVersion = metadata.getMaxVersion();
-        final int globalVersion = metadata.getGlobalVersion();
-        final int reqVersion = request.getVersion();
+        final Integer globalVersion = metadata.getGlobalVersion();
+        final Integer reqVersion = request.getVersion();
+        final List<Metadata.ClientVersion> activateVersionListReq = request.getActivateVersionList();
         if (reqVersion > maxVersion) {
             return new ActivateConfigResponse();
         }
 
-        List<Metadata.ClientVersion> clientVersionList = new ArrayList<>();
-        final Map<String, Metadata.ClientVersion> activateVersions = request.getActivateVersionList()
+
+        if (activateVersionListReq == null || activateVersionListReq.size() == 0) {
+            return null;
+        }
+
+        List<Metadata.ClientVersion> illegalClientVersionList = new ArrayList<>();
+        final Map<String, Metadata.ClientVersion> activateVersions = activateVersionListReq
                 .stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity()));
 
         for (Metadata.ClientVersion clientVersion : activateVersions.values()) {
             if (clientVersion.getVersion() > maxVersion) {
-                clientVersionList.add(clientVersion);
+                illegalClientVersionList.add(clientVersion);
                 continue;
             }
 
@@ -84,7 +90,7 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
             }
         }
 
-        if (!clientVersionList.isEmpty()) {
+        if (!illegalClientVersionList.isEmpty()) {
             return new ActivateConfigResponse();
         }
         return null;

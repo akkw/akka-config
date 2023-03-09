@@ -52,7 +52,7 @@ public class MysqlStore implements Store {
                 () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
                 MysqlConfigModel.class, excludeColumnList);
 
-        return mysqlConfigModels.get(0);
+        return mysqlConfigModels.size() == 0 ? null : mysqlConfigModels.get(0);
     }
 
     @Override

@@ -5,14 +5,14 @@ package com.akka.config.protocol;/*
 public class Request {
     protected String namespace;
     protected String environment;
-    protected int version;
+    protected Integer version;
 
 
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 

@@ -13,9 +13,9 @@ public class Metadata {
 
     private Set<Metadata.ClientVersion> verifyVersions;
 
-    private int globalVersion;
+    private Integer globalVersion;
 
-    private int verifyVersion;
+    private Integer verifyVersion;
 
     private String namespace;
 
@@ -23,11 +23,11 @@ public class Metadata {
 
     private int maxVersion;
 
-    public int getVerifyVersion() {
+    public Integer getVerifyVersion() {
         return verifyVersion;
     }
 
-    public void setVerifyVersion(int verifyVersion) {
+    public void setVerifyVersion(Integer verifyVersion) {
         this.verifyVersion = verifyVersion;
     }
 
@@ -47,11 +47,11 @@ public class Metadata {
         this.verifyVersions = verifyVersions;
     }
 
-    public int getGlobalVersion() {
+    public Integer getGlobalVersion() {
         return globalVersion;
     }
 
-    public void setGlobalVersion(int globalVersion) {
+    public void setGlobalVersion(Integer globalVersion) {
         this.globalVersion = globalVersion;
     }
 

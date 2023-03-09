@@ -37,7 +37,7 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
 
         final String namespace = request.getNamespace();
         final String environment = request.getEnvironment();
-        final int version = request.getVersion();
+        final Integer version = request.getVersion();
         final List<Metadata.ClientVersion> verifyVersionList = request.getVerifyVersionList();
         final String etcdMetadataPath = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
 
@@ -60,11 +60,11 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
 
 
     private VerifyConfigResponse checkMetadataNoPass(Metadata metadata, VerifyConfigRequest request) {
-        final int maxVersion = metadata.getMaxVersion();
-        final int verifyVersion = metadata.getVerifyVersion();
-        final int version = request.getVersion();
+        final Integer maxVersion = metadata.getMaxVersion();
+        final Integer verifyVersion = metadata.getVerifyVersion();
+        final Integer version = request.getVersion();
 
-        if (version > maxVersion) {
+        if (version != null && version > maxVersion) {
             return new VerifyConfigResponse();
         }
 
@@ -81,7 +81,7 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
                     continue;
                 }
 
-                if (clientVersion.getVersion() == verifyVersion) {
+                if (Objects.equals(clientVersion.getVersion(), verifyVersion)) {
                     request.getVerifyVersionList().remove(clientVersion);
                 }
             }

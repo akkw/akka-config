@@ -11,7 +11,8 @@ package com.akka.config.protocol;/*
     CONFIG_CREATE_ERROR(304,""),
     CONFIG_DELETE_ERROR(305,""),
     CONFIG_READ_ERROR(306,""),
-    METADATA_NOT_EXIST(307,"");
+    CONFIG_NOT_EXIST(307,""),
+    METADATA_NOT_EXIST(308,"");
 
 
     private final int code;
