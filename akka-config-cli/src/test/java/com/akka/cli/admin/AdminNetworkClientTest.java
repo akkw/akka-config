@@ -59,7 +59,7 @@ import java.util.List;
         clientVersion.setClient("127.0.0.1");
         clientVersion.setVersion(3);
         clientVersionList.add(clientVersion);
-        client.activateConfig("akka-name", "dev", 2, "127.0.0.1", null);
+        client.activateConfig("akka-name", "dev", 3, "127.0.0.1", clientVersionList);
     }
 
     @org.junit.Test

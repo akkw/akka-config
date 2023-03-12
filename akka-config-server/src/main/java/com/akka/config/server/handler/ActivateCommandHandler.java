@@ -13,7 +13,6 @@ import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
-import io.etcd.jetcd.Client;
 import javafx.util.Pair;
 
 import java.nio.charset.StandardCharsets;
@@ -39,59 +38,44 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
         final ActivateConfigRequest request = JSON.parseObject(command.getBody(), ActivateConfigRequest.class);
         final String namespace = request.getNamespace();
         final String environment = request.getEnvironment();
-        final Integer version = request.getVersion();
-        final List<Metadata.ClientVersion> activateVersionList = request.getActivateVersionList();
+        final Integer reqVersion = request.getVersion();
         final String etcdEnvMetadataPath = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
 
 
         final Pair<String, String> etcdMetadata = etcdClient.get(etcdEnvMetadataPath);
         final Metadata metadata = JSON.parseObject(etcdMetadata.getValue(), Metadata.class);
 
-        final ActivateConfigResponse noPassResp = checkMetadataNoPass(metadata, request);
+        final Response noPassResp = checkMetadataNoPass(metadata, request);
         if (noPassResp != null) {
             return CompletableFuture.completedFuture(noPassResp);
         }
 
-        metadata.setGlobalVersion(version);
-        fillClientVersion(metadata.getActivateVersions(), activateVersionList);
-
+        clearUpClientVersion(reqVersion, metadata.getActivateVersions(), request.getActivateVersionList());
+        metadata.setGlobalVersion(reqVersion);
         etcdClient.put(etcdEnvMetadataPath, JSON.toJSONString(metadata));
         return CompletableFuture.completedFuture(new ActivateConfigResponse(ResponseCode.SUCCESS.code(),
                 ResponseCode.SUCCESS.getDesc().getBytes(StandardCharsets.UTF_8)));
     }
 
 
-    private ActivateConfigResponse checkMetadataNoPass(Metadata metadata, ActivateConfigRequest request) {
-        final int maxVersion = metadata.getMaxVersion();
-        final Integer globalVersion = metadata.getGlobalVersion();
-        final Integer reqVersion = request.getVersion();
-        final List<Metadata.ClientVersion> activateVersionListReq = request.getActivateVersionList();
-        if (reqVersion > maxVersion) {
-            return new ActivateConfigResponse();
-        }
-
-
-        if (activateVersionListReq == null || activateVersionListReq.size() == 0) {
+    private Response checkMetadataNoPass(Metadata metadata, ActivateConfigRequest request) {
+        final Integer version = request.getVersion();
+        final List<Metadata.ClientVersion> reqActivateVersionList = request.getActivateVersionList();
+        if (version == null || reqActivateVersionList == null) {
             return null;
         }
 
-        List<Metadata.ClientVersion> illegalClientVersionList = new ArrayList<>();
-        final Map<String, Metadata.ClientVersion> activateVersions = activateVersionListReq
-                .stream().collect(Collectors.toMap(Metadata.ClientVersion::getClient, Function.identity()));
+        final int maxVersion = metadata.getMaxVersion();
 
-        for (Metadata.ClientVersion clientVersion : activateVersions.values()) {
-            if (clientVersion.getVersion() > maxVersion) {
-                illegalClientVersionList.add(clientVersion);
-                continue;
-            }
-
-            if (clientVersion.getVersion() == globalVersion) {
-                request.getActivateVersionList().remove(clientVersion);
-            }
+        Response response = checkVersion(request.getVersion(), maxVersion);
+        if (response != null) {
+            return response;
         }
-
-        if (!illegalClientVersionList.isEmpty()) {
-            return new ActivateConfigResponse();
+        for (Metadata.ClientVersion reqClientVersion: reqActivateVersionList) {
+            response = checkVersion(reqClientVersion.getVersion(), maxVersion);
+            if (response != null) {
+                return response;
+            }
         }
         return null;
     }

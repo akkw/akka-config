@@ -3,4 +3,11 @@ package com.akka.config.protocol;/*
  */
 
 public class VerifyConfigResponse extends Response {
+
+    public VerifyConfigResponse() {
+    }
+
+    public VerifyConfigResponse(int code) {
+        super(code);
+    }
 }
