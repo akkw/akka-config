@@ -43,7 +43,7 @@ public class HaController {
 
         boolean leaderPathResult = false;
 
-        final String leaderPath = PathUtils.createLeaderPatch(haConfig, namespace);
+        final String leaderPath = PathUtils.createLeaderPath(haConfig, namespace);
         final LeaderElectionRequest leaderElectionRequest = new LeaderElectionRequest(namespace, localhost);
 
         try {

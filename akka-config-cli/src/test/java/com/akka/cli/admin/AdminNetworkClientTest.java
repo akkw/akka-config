@@ -5,7 +5,6 @@ import com.akka.config.protocol.*;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
-import com.alibaba.fastjson2.JSON;
 import org.junit.Assert;
 import org.junit.Before;
 

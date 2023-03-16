@@ -17,11 +17,15 @@ public class PathUtils {
         return null;
     }
 
-    public static String createLeaderPatch(final PathConfig haConfig, final String namespace) {
+    public static String createLeaderPath(final PathConfig haConfig, final String namespace) {
         return  haConfig.getLeaderPath() + namespace;
     }
 
-    public static String createEnvironmentPatch(final PathConfig haConfig, final String namespace, final String environment) {
+    public static String createEnvironmentPath(final PathConfig haConfig, final String namespace, final String environment) {
         return  haConfig.getMetadataPath() + namespace + "/environment/" + environment;
+    }
+
+    public static String createUndoLogPath(final PathConfig haConfig, final String namespace, final String environment, final String kind) {
+        return  haConfig.getUndoLog() + namespace + "/environment/" + environment + "/" + kind;
     }
 }

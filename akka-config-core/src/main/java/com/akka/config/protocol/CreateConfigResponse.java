@@ -8,6 +8,10 @@ public class CreateConfigResponse extends Response {
     public CreateConfigResponse() {
     }
 
+    public CreateConfigResponse(int code) {
+        super(code);
+    }
+
     public CreateConfigResponse(int code, byte[] error) {
         super(code, error);
     }

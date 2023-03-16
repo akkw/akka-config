@@ -38,7 +38,7 @@ public class DeleteCommandHandler extends AbstractCommandHandler {
         final String environment = deleteConfigRequest.getEnvironment();
         final Integer delVersion = deleteConfigRequest.getVersion();
 
-        final Pair<String, String> etcdMetadata = etcdClient.get(PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment));
+        final Pair<String, String> etcdMetadata = etcdClient.get(PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment));
         final Metadata metadata = JSON.parseObject(etcdMetadata.getValue(), Metadata.class);
 
 

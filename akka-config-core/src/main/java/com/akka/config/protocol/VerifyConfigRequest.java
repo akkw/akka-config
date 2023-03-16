@@ -3,7 +3,6 @@ package com.akka.config.protocol;/*
  */
 
 import java.util.List;
-import java.util.Map;
 
 public class VerifyConfigRequest extends Request {
     private List<Metadata.ClientVersion> verifyVersionList;

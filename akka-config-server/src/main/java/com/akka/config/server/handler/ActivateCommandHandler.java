@@ -4,11 +4,7 @@ package com.akka.config.server.handler;/*
 
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.ActivateConfigRequest;
-import com.akka.config.protocol.ActivateConfigResponse;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
-import com.akka.config.protocol.ResponseCode;
+import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
@@ -16,11 +12,9 @@ import com.alibaba.fastjson2.JSON;
 import javafx.util.Pair;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class ActivateCommandHandler extends AbstractCommandHandler {
 
@@ -39,7 +33,7 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
         final String namespace = request.getNamespace();
         final String environment = request.getEnvironment();
         final Integer reqVersion = request.getVersion();
-        final String etcdEnvMetadataPath = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
+        final String etcdEnvMetadataPath = PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment);
 
 
         final Pair<String, String> etcdMetadata = etcdClient.get(etcdEnvMetadataPath);

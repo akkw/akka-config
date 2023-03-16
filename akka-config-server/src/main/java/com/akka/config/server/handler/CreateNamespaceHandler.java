@@ -28,7 +28,7 @@ public class CreateNamespaceHandler extends AbstractCommandHandler {
         final CreateNamespaceRequest request = JSON.parseObject(command.getBody(), CreateNamespaceRequest.class);
         final String namespace = request.getNamespace();
         final String environment = request.getEnvironment();
-        final String environmentPatch = PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
+        final String environmentPatch = PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment);
         final Metadata metadata = new Metadata();
         metadata.setNamespace(namespace);
         metadata.setEnvironment(environment);

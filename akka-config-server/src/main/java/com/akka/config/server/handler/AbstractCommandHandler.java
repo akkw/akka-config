@@ -12,13 +12,9 @@ import com.akka.config.protocol.VerifyConfigResponse;
 import com.alibaba.fastjson2.JSON;
 import javafx.util.Pair;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 abstract class AbstractCommandHandler implements CommandHandler {
 
@@ -38,13 +34,13 @@ abstract class AbstractCommandHandler implements CommandHandler {
 
     protected Metadata getEtcdMetadata(String namespace, String environment) throws ExecutionException, InterruptedException {
         final Pair<String, String> metadataPair = etcdClient.get(
-                PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment));
+                PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment));
         return JSON.parseObject(metadataPair != null ? metadataPair.getValue() : null, Metadata.class);
     }
 
 
     protected String getEtcdMetadataPath(String namespace, String environment) {
-        return PathUtils.createEnvironmentPatch(etcdClient.getConfig().getPathConfig(), namespace, environment);
+        return PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment);
     }
 
 
