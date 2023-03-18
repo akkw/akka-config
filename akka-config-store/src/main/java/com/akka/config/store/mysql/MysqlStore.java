@@ -49,8 +49,8 @@ public class MysqlStore implements Store {
         final ArrayList<String> excludeColumnList = new ArrayList<>();
         excludeColumnList.add("id");
         final List<MysqlConfigModel> mysqlConfigModels = MysqlUtils.mysqlSelect(data,
-                () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
-                MysqlConfigModel.class, excludeColumnList);
+            () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
+            MysqlConfigModel.class, excludeColumnList);
 
         return mysqlConfigModels.size() == 0 ? null : mysqlConfigModels.get(0);
     }
@@ -65,8 +65,8 @@ public class MysqlStore implements Store {
         final ArrayList<String> excludeColumnList = new ArrayList<>();
         excludeColumnList.add("id");
         final List<MysqlConfigModel> mysqlConfigModelList = MysqlUtils.mysqlSelect(data,
-                () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version >= ? and version <= ?",
-                MysqlConfigModel.class, excludeColumnList);
+            () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version >= ? and version <= ?",
+            MysqlConfigModel.class, excludeColumnList);
 
         return mysqlConfigModelList;
     }

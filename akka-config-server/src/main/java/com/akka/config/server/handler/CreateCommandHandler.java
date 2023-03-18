@@ -3,9 +3,15 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.CreateConfigRequest;
+import com.akka.config.protocol.CreateConfigResponse;
+import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.config.server.core.MetadataManager;
-import com.akka.config.server.transaction.*;
+import com.akka.config.server.transaction.Transaction;
+import com.akka.config.server.transaction.TransactionKind;
+import com.akka.config.server.transaction.TransactionManager;
+import com.akka.config.server.transaction.TransactionResult;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
@@ -27,9 +33,6 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         this.transactionManager = transactionManager;
     }
 
-
-
-    // TODO 验证数据库是否存在这个版本
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final CreateConfigRequest createConfigRequest = JSON.parseObject(command.getBody(), CreateConfigRequest.class);
@@ -45,18 +48,16 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         }
 
         final Transaction transaction = transactionManager.begin(namespace, environment, contents, TransactionKind.METADATA);
-        if (transaction instanceof NOPTransaction) {
-            response = new CreateConfigResponse();
-            fillResponse(response, ResponseCode.CONFIG_CREATE_ERROR);
-            return CompletableFuture.completedFuture(response);
-        }
 
         transaction.executor();
-        final TransactionResult end = transactionManager.end(transaction.getTransactionId());
-        response = new CreateConfigResponse();
-        return end.isSuccess() ? CompletableFuture.completedFuture(response) : CompletableFuture.completedFuture(fillResponse(response, ResponseCode.CONFIG_CREATE_ERROR));
-    }
 
+        final TransactionResult result = transactionManager.end(transaction.getTransactionId());
+
+
+        response = new CreateConfigResponse();
+        return result.isSuccess() ? CompletableFuture.completedFuture(fillResponse(response, ResponseCode.SUCCESS)) :
+                CompletableFuture.completedFuture(fillResponse(response, ResponseCode.CONFIG_CREATE_ERROR, result.getMessage()));
+    }
 
     private Response checkRequest(CreateConfigRequest request) {
         final String namespace = request.getNamespace();

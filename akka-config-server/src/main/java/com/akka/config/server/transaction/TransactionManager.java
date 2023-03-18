@@ -6,6 +6,7 @@ import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.ha.etcd.EtcdConfig;
 import com.akka.config.store.Store;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import java.util.concurrent.ExecutionException;
 public class TransactionManager {
 
     private final static Logger logger = LoggerFactory.getLogger(TransactionManager.class);
-    private final Map<String, CreateConfigTransaction> transactionSnapshotMap = new ConcurrentHashMap<>();
+    private final Map<String, Transaction> transactionSnapshotMap = new ConcurrentHashMap<>();
 
     private final EtcdClient etcdClient;
 
@@ -31,10 +32,13 @@ public class TransactionManager {
     }
 
     public Transaction begin(String namespace, String environment, byte[] contents, TransactionKind transactionKind) {
+        final String transactionId = getTransactionId(namespace, environment, transactionKind);
         final Transaction checkNoPaas = checkNoPaas(namespace, environment, transactionKind, contents);
         if (checkNoPaas != null) {
+            transactionSnapshotMap.putIfAbsent(transactionId, checkNoPaas);
             return checkNoPaas;
         }
+
 
         final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.name());
         String lockKey;
@@ -44,7 +48,7 @@ public class TransactionManager {
             logger.error("create transaction failed, namespace: {}, environment: {}, transactionKind: {},", namespace, environment, transactionKind);
             return new NOPTransaction(null, e);
         }
-        final String transactionId = getTransactionId(namespace, environment, transactionKind);
+
         final CreateConfigTransaction transactionSnapshot = new CreateConfigTransaction(namespace, environment, contents, etcdClient, store, transactionId, lockKey);
         transactionSnapshotMap.putIfAbsent(transactionId, transactionSnapshot);
         return transactionSnapshot;
@@ -76,14 +80,25 @@ public class TransactionManager {
 
 
     public TransactionResult end(String transactionId) throws InterruptedException, ExecutionException {
-        final CreateConfigTransaction transactionSnapshot = transactionSnapshotMap.remove(transactionId);
-        if (transactionSnapshot != null) {
-            transactionSnapshot.await();
-            etcdClient.unlock(transactionSnapshot.getLockKey());
-            return new TransactionResult();
+        final Transaction transactionSnapshot = transactionSnapshotMap.remove(transactionId);
+        if (transactionSnapshot instanceof NOPTransaction) {
+            return buildTransactionResult(transactionSnapshot);
         }
-        return new TransactionResult();
+        transactionSnapshot.await();
+        etcdClient.unlock(transactionSnapshot.getLockKey());
+        return buildTransactionResult(transactionSnapshot);
     }
 
+    public TransactionResult buildTransactionResult(@NonNull Transaction transaction) {
+        final TransactionResult result = new TransactionResult();
 
+        final Exception exception = transaction.getException();
+        final boolean success = exception == null;
+        result.setSuccess(success);
+        if (!success) {
+            result.setMessage(exception.getMessage());
+            result.setException(exception);
+        }
+        return result;
+    }
 }

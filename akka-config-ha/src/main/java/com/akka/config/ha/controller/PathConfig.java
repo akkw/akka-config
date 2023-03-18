@@ -9,7 +9,7 @@ public class PathConfig {
     private String leader = "/leader/";
 
     private String metadata = "/metadata/";
-    private final static String undoLog = "/undoLog/";
+    private final static String UNDO_LOG = "/undoLog/";
 
     private long electionTimeout = 5000;
 
@@ -55,6 +55,6 @@ public class PathConfig {
     }
 
     public String getUndoLog() {
-        return rootPath + undoLog;
+        return rootPath + UNDO_LOG;
     }
 }

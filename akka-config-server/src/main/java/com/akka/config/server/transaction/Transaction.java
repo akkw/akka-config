@@ -16,6 +16,7 @@ public abstract class Transaction {
 
     private String lockKey;
 
+    protected Exception exception;
 
     protected final EtcdClient etcdClient;
 
@@ -41,6 +42,10 @@ public abstract class Transaction {
 
     abstract void await() throws InterruptedException;
 
+    public Exception getException() {
+        return exception;
+    }
+
     public String getLockKey() {
         return lockKey;
     }
@@ -52,6 +57,6 @@ public abstract class Transaction {
     protected Metadata metadata(String namespace, String environment) throws ExecutionException, InterruptedException {
         final Pair<String, String> etcdMetadataPair = etcdClient.get(
                 PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment));
-       return JSON.parseObject(etcdMetadataPair.getValue(), Metadata.class);
+        return JSON.parseObject(etcdMetadataPair.getValue(), Metadata.class);
     }
 }

@@ -15,7 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.SQLException;
-import java.util.concurrent.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class CreateConfigTransaction extends Transaction {
 
@@ -40,7 +46,7 @@ public class CreateConfigTransaction extends Transaction {
     private Metadata etcdMetadata;
 
 
-    private Exception ex;
+
 
     private final CountDownLatch countDownLatch;
 
@@ -102,10 +108,11 @@ public class CreateConfigTransaction extends Transaction {
                         throw new RuntimeException(e);
                     }
                 });
+
                 while (!configFuture.isDone() && !metadataFuture.isDone()) {
                     final long currentTimeMillis = System.currentTimeMillis();
                     if (currentTimeMillis - beginTimeMs > timeoutMs) {
-                        CreateConfigTransaction.this.ex = new TimeoutException("Transaction execution timeout, namespace: "
+                        CreateConfigTransaction.this.exception = new TimeoutException("Transaction execution timeout, namespace: "
                                 + namespace + "environment: " + environment);
                         configFuture.cancel(true);
                         metadataFuture.cancel(true);
@@ -120,7 +127,7 @@ public class CreateConfigTransaction extends Transaction {
                 } catch (Exception exc) {
                     logger.error("Transaction rollback failed, namespace: {}, environment: {}", namespace, environment, exc);
                 }
-                CreateConfigTransaction.this.ex = e;
+                CreateConfigTransaction.this.exception = e;
             } finally {
                 down();
             }
@@ -202,7 +209,7 @@ public class CreateConfigTransaction extends Transaction {
 
     @Override
     Exception exception() {
-        return ex;
+        return exception;
     }
 
     @Override

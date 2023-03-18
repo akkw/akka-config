@@ -14,11 +14,11 @@ public class TransactionUndoLog {
     private final long beginTime;
 
     public TransactionUndoLog(int newVersion, int maxVersion, String namespace, String environment, long beginTime) {
-        this.newVersion = newVersion;
-        this.maxVersion= maxVersion;
         this.namespace = namespace;
-        this.environment = environment;
         this.beginTime = beginTime;
+        this.newVersion = newVersion;
+        this.maxVersion = maxVersion;
+        this.environment = environment;
     }
 
     public int getNewVersion() {

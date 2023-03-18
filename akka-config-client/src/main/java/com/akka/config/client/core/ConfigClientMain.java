@@ -14,13 +14,11 @@ public class ConfigClientMain {
         client.watch("akka-name", "dev", new ConfigWatch() {
             @Override
             public boolean verify(Config config) {
-                System.out.println("verify: " + config.toString());
                 return false;
             }
 
             @Override
             public void activate(Config config) {
-                System.out.println("activate: " + config.toString());
             }
         });
         new CountDownLatch(1).await();

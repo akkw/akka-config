@@ -4,7 +4,11 @@ package com.akka.config.server.handler;/*
 
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.ActivateConfigRequest;
+import com.akka.config.protocol.ActivateConfigResponse;
+import com.akka.config.protocol.Metadata;
+import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
@@ -26,7 +30,7 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
         this.store = store;
         this.metadataManager = metadataManager;
     }
-    // TODO 验证数据库是否存在这个版本
+
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final ActivateConfigRequest request = JSON.parseObject(command.getBody(), ActivateConfigRequest.class);

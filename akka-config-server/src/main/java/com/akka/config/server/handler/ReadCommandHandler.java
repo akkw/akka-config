@@ -22,9 +22,7 @@ public class ReadCommandHandler extends AbstractCommandHandler {
     }
 
 
-    // TODO store 中未读出需要的配置,返回不存在code
-    // TODO version 为null
-    // TODO 读store失败
+
     @Override
     public CompletableFuture<Response> commandHandler(Command command) {
         final ReadConfigRequest readConfigRequest = JSON.parseObject(command.getBody(), ReadConfigRequest.class);

@@ -18,8 +18,6 @@ import com.akka.config.protocol.DeleteConfigResponse;
 import com.akka.config.protocol.Metadata;
 import com.akka.config.protocol.MultiReadConfigRequest;
 import com.akka.config.protocol.MutliReadConfigResponse;
-import com.akka.config.protocol.ReadConfigRequest;
-import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.config.protocol.VerifyConfigRequest;
 import com.akka.config.protocol.VerifyConfigResponse;
 import com.akka.config.protocol.VerifyMultiConfigRequest;

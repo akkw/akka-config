@@ -3,7 +3,6 @@ package com.akka.config.server.transaction;/*
  */
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicMarkableReference;
 
 public class Once {
 

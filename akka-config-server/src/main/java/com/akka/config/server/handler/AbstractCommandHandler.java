@@ -24,7 +24,6 @@ abstract class AbstractCommandHandler implements CommandHandler {
     }
 
 
-    // TODO 抽象读etcd中的元数据方法
     public AbstractCommandHandler(EtcdClient etcdClient) {
         this.etcdClient = etcdClient;
     }

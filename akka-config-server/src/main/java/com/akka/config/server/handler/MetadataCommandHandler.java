@@ -3,10 +3,12 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.Metadata;
+import com.akka.config.protocol.MetadataRequest;
+import com.akka.config.protocol.MetadataResponse;
+import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.config.server.core.MetadataManager;
-import com.akka.config.store.Store;
-import com.akka.config.store.mysql.MysqlStore;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson.JSON;
 
@@ -24,7 +26,6 @@ public class MetadataCommandHandler extends AbstractCommandHandler {
         this.metadataManager = metadataManager;
     }
 
-    // TODO 验证数据库是否存在这个版本
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final MetadataRequest metadataRequest = JSON.parseObject(command.getBody(), MetadataRequest.class);
@@ -52,7 +53,7 @@ public class MetadataCommandHandler extends AbstractCommandHandler {
 
         if (clientVerifyVersion != null) {
             metadataResponse.setVerifyVersion(clientVerifyVersion.getVersion());
-        } else if (etcdMetadata.getVerifyVersion() != null){
+        } else if (etcdMetadata.getVerifyVersion() != null) {
             metadataResponse.setVerifyVersion(etcdMetadata.getVerifyVersion());
         } else {
             if (clientActivateVersion != null) {

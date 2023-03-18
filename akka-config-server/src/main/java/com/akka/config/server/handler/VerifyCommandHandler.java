@@ -3,13 +3,16 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.Metadata;
+import com.akka.config.protocol.Response;
+import com.akka.config.protocol.VerifyConfigRequest;
+import com.akka.config.protocol.VerifyConfigResponse;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -26,10 +29,6 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
     }
 
 
-    // TODO version 为null
-    // TODO verifyVersionList 为空
-    // TODO 当 verifyVersionList 中的某一个version与 request中version相等时 移除 verifyVersionList 中的veriosn
-    // TODO 所有的version值合理
     @Override
     public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
         final byte[] body = command.getBody();
