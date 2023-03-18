@@ -20,6 +20,7 @@ import com.akka.config.server.handler.ReadCommandHandler;
 import com.akka.config.server.handler.VerifyCommandHandler;
 import com.akka.config.server.handler.VerifyMultiCommandHandler;
 import com.akka.config.server.protocol.MetadataEvent;
+import com.akka.config.server.transaction.TransactionManager;
 import com.akka.config.store.Store;
 import com.akka.config.store.mysql.MysqlStore;
 import com.akka.remoting.netty.NettyRequestProcessor;
@@ -62,6 +63,8 @@ public class ServerController implements LifeCycle {
 
     private final MetadataManager metadataManager = new MetadataManager();
 
+    private final TransactionManager transactionManager;
+
     public ServerController(EtcdClient etcdClient) {
         this.etcdClient = etcdClient;
         this.etcdConfig = etcdClient.getConfig();
@@ -70,6 +73,7 @@ public class ServerController implements LifeCycle {
         this.haController = new HaController(etcdClient, etcdConfig.getPathConfig());
         this.configStore = new MysqlStore();
         this.serverNetwork = new ServerNetwork(new NettyServerConfig());
+        this.transactionManager = new TransactionManager(etcdClient, configStore);
     }
 
     @Override
@@ -140,7 +144,7 @@ public class ServerController implements LifeCycle {
     }
 
     private void initHandler() {
-        requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.etcdClient, this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.CREATE, new CreateCommandHandler(this.etcdClient, this.configStore, metadataManager, transactionManager));
         requestHandlerMap.put(CommandCode.DELETE, new DeleteCommandHandler(this.etcdClient, this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.READ, new ReadCommandHandler(this.configStore));
         requestHandlerMap.put(CommandCode.METADATA, new MetadataCommandHandler(etcdClient, metadataManager));

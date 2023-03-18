@@ -31,7 +31,7 @@ public class EtcdClientTest {
 
     @org.junit.Test
     public void putIfAbsent() throws ExecutionException, InterruptedException {
-        etcdClient.del("/root/akka/metadata/akka-name/environment/dev2", "1");
+        etcdClient.del("/root/akka/metadata/akka-name/environment/dev2");
         boolean result = etcdClient.putIfAbsent("/root/akka/metadata/akka-name/environment/dev2", "1");
         Assert.assertTrue(result);
         result = etcdClient.putIfAbsent("/root/akka/metadata/akka-name/environment/dev2", "1");

@@ -16,9 +16,10 @@ import java.util.concurrent.ExecutionException;
 
 public interface CommandHandler {
 
-    default void fillResponse(Response response, ResponseCode responseCode) {
+    default Response fillResponse(Response response, ResponseCode responseCode) {
         response.setCode(responseCode.code());
         response.setMessage(responseCode.getDesc().getBytes(StandardCharsets.UTF_8));
+        return response;
     }
 
 

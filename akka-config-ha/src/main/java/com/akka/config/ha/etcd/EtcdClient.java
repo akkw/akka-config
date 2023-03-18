@@ -104,7 +104,19 @@ public class EtcdClient implements LifeCycle {
         }
     }
 
+    public String lock(String key, long timeoutMs) throws ExecutionException, InterruptedException, TimeoutException {
 
+        if (key == null || "".equals(key)) {
+            throw new NullPointerException();
+        }
+
+        if (lockClient == null) {
+            throw new NullPointerException();
+        }
+        checkOrCreateLeaseId();
+        ByteSequence lockKey = createByteSequence(key);
+        return lockClient.lock(lockKey, leaseId).get(timeoutMs, TimeUnit.MILLISECONDS).getKey().toString();
+    }
     public String lock(String key) throws ExecutionException, InterruptedException {
 
         if (key == null || "".equals(key)) {
@@ -114,7 +126,7 @@ public class EtcdClient implements LifeCycle {
         if (lockClient == null) {
             throw new NullPointerException();
         }
-
+        checkOrCreateLeaseId();
         ByteSequence lockKey = createByteSequence(key);
         return lockClient.lock(lockKey, leaseId).get().getKey().toString();
     }
@@ -243,7 +255,7 @@ public class EtcdClient implements LifeCycle {
         this.kvClient.put(createByteSequence(key), createByteSequence(value)).get();
     }
 
-    public void del(String key, String value) throws ExecutionException, InterruptedException {
+    public void del(String key) throws ExecutionException, InterruptedException {
         this.kvClient.delete(createByteSequence(key)).get();
     }
 
@@ -329,6 +341,22 @@ public class EtcdClient implements LifeCycle {
             final CompletableFuture<LeaseGrantResponse> grantFuture = this.leaseClient.grant(config.getLeaseLiveTimeout(),
                     config.getCreateLeaseIdTimeout(), TimeUnit.MILLISECONDS);
             leaseId = grantFuture.get().getID();
+            leaseClient.keepAlive(leaseId, new StreamObserver<LeaseKeepAliveResponse>() {
+                @Override
+                public void onNext(LeaseKeepAliveResponse value) {
+                    logger.info("leaseId keepAlive, leaseId: {}, ttl: {}", value.getID(), value.getTTL());
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    logger.error("leaseId keepAlive failed", t);
+                }
+
+                @Override
+                public void onCompleted() {
+
+                }
+            });
             return;
         }
 

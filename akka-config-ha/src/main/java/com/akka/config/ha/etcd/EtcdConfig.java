@@ -9,7 +9,7 @@ public class EtcdConfig {
 
     private long createLeaseIdTimeout = 5000;
 
-    private long leaseLiveTimeout = 5;
+    private long leaseLiveTimeout = 200;
 
     private String username = "root";
     private String password = "root";

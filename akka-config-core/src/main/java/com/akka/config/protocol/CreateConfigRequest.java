@@ -3,21 +3,21 @@ package com.akka.config.protocol;/*
  */
 
 public class CreateConfigRequest extends Request {
-    private byte[] body;
+    private byte[] contents;
 
 
-    public CreateConfigRequest(String namespace, String environment, byte[] body) {
+    public CreateConfigRequest(String namespace, String environment, byte[] contents) {
         this.namespace = namespace;
         this.environment = environment;
-        this.body = body;
+        this.contents = contents;
     }
 
-    public byte[] getBody() {
-        return body;
+    public byte[] getContents() {
+        return contents;
     }
 
-    public void setBody(byte[] body) {
-        this.body = body;
+    public void setContents(byte[] contents) {
+        this.contents = contents;
     }
 
 

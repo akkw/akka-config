@@ -21,11 +21,24 @@ public class PathUtils {
         return  haConfig.getLeaderPath() + namespace;
     }
 
+    public static String createLockPath(final PathConfig haConfig, final String namespace, final String environment, String kind) {
+        return  haConfig.getLeaderPath() + createPath(namespace, environment, kind);
+    }
+
     public static String createEnvironmentPath(final PathConfig haConfig, final String namespace, final String environment) {
         return  haConfig.getMetadataPath() + namespace + "/environment/" + environment;
     }
 
     public static String createUndoLogPath(final PathConfig haConfig, final String namespace, final String environment, final String kind) {
         return  haConfig.getUndoLog() + namespace + "/environment/" + environment + "/" + kind;
+    }
+
+
+    private static String createPath(String... nodes) {
+        StringBuilder path = new StringBuilder();
+        for (String node : nodes) {
+            path.append("/").append(node);
+        }
+        return path.toString();
     }
 }

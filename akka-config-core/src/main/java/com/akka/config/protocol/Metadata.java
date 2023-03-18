@@ -114,24 +114,15 @@ public class Metadata {
         }
     }
 
-    public static class ConfigRemotePath {
-        private String dBRemoteAddress;
-        private String cacheRemoteAddress;
-
-        public String getDBRemoteAddress() {
-            return dBRemoteAddress;
-        }
-
-        public void setDBRemoteAddress(String dBRemoteAddress) {
-            this.dBRemoteAddress = dBRemoteAddress;
-        }
-
-        public String getCacheRemoteAddress() {
-            return cacheRemoteAddress;
-        }
-
-        public void setCacheRemoteAddress(String cacheRemoteAddress) {
-            this.cacheRemoteAddress = cacheRemoteAddress;
-        }
+    public Metadata copy() {
+        Metadata metadata = new Metadata();
+        metadata.namespace = this.namespace;
+        metadata.environment = this.environment;
+        metadata.globalVersion = this.globalVersion;
+        metadata.verifyVersion = this.verifyVersion;
+        metadata.activateVersions = this.activateVersions;
+        metadata.verifyVersions = this.verifyVersions;
+        metadata.maxVersion = this.maxVersion;
+        return metadata;
     }
 }

@@ -30,7 +30,7 @@ import java.util.List;
 
     @org.junit.Test
     public void createConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final CreateConfigResponse response = client.createConfig("akka-name", "dev", "body");
+        final CreateConfigResponse response = client.createConfig("akka-name", "dev", "createConfig");
     }
 
     @org.junit.Test
