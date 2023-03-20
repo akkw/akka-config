@@ -27,12 +27,11 @@ public class CreateConfigTransaction extends Transaction {
 
     private final static Logger logger = LoggerFactory.getLogger(CreateConfigTransaction.class);
 
-
-    private final String namespace;
-    private final String environment;
-
-    private final long timeoutMs = 500000;
     private final byte[] contents;
+
+    private final long timeoutMs = 200;
+
+
     private final TransactionThread worker;
 
     private int maxVersion = -1;
@@ -46,14 +45,10 @@ public class CreateConfigTransaction extends Transaction {
     private Metadata etcdMetadata;
 
 
-
-
     private final CountDownLatch countDownLatch;
 
     public CreateConfigTransaction(String namespace, String environment, byte[] contents, EtcdClient etcdClient, Store store, String transactionId, String lockKey) {
-        super(etcdClient, transactionId, lockKey);
-        this.namespace = namespace;
-        this.environment = environment;
+        super(etcdClient, transactionId, lockKey, namespace, environment);
         this.worker = this.new TransactionThread(namespace + "_" + environment);
         this.contents = contents;
         this.store = store;
@@ -92,6 +87,8 @@ public class CreateConfigTransaction extends Transaction {
                 prepare();
 
                 Retry.retry(CreateConfigTransaction.this::undoLog);
+                undoLogWriteSuccess = true;
+
 
                 final Future<?> configFuture = transactionExecutor.submit(() -> {
                     try {
@@ -116,14 +113,14 @@ public class CreateConfigTransaction extends Transaction {
                                 + namespace + "environment: " + environment);
                         configFuture.cancel(true);
                         metadataFuture.cancel(true);
-                        rollback();
+                        rollback(false);
                         break;
                     }
                     TimeUnit.MILLISECONDS.sleep(200);
                 }
             } catch (Exception e) {
                 try {
-                    rollback();
+                    rollback(false);
                 } catch (Exception exc) {
                     logger.error("Transaction rollback failed, namespace: {}, environment: {}", namespace, environment, exc);
                 }
@@ -137,22 +134,41 @@ public class CreateConfigTransaction extends Transaction {
     }
 
     private void prepare() throws ExecutionException, InterruptedException, SQLException {
+        checkNoPaas();
+
         etcdMetadata = metadata(namespace, environment);
+        if (etcdMetadata == null) {
+            throw new IllegalArgumentException("etcd metadata does not exist");
+        }
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKind.METADATA.name());
         final Pair<String, String> etcdMetadataPair = etcdClient.get(undoLogPath);
         if (etcdMetadataPair != null) {
-            rollback();
+            rollback(true);
         }
     }
 
-    private void rollback() throws ExecutionException, InterruptedException, SQLException {
-        try {
-            if (!rollbackOnce.isDown()) {
-                etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(etcdMetadata));
-                store.delete(namespace, environment, newVersion);
-            }
-        } finally {
-            rollbackOnce.down();
+    private void checkNoPaas() {
+        if (namespace == null || "".equals(namespace)) {
+            throw new IllegalArgumentException("namespace is null");
+        }
+
+        if (environment == null || "".equals(environment)) {
+            throw new IllegalArgumentException("environment is null"));
+        }
+
+        if (contents == null) {
+            throw new IllegalArgumentException("contents is null"));
+        }
+
+        if (etcdClient == null) {
+            throw new IllegalArgumentException("internal error");
+        }
+    }
+
+    private void rollback(boolean prev) throws ExecutionException, InterruptedException, SQLException {
+        if (undoLogWriteSuccess || prev) {
+            etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(etcdMetadata));
+            store.delete(namespace, environment, newVersion);
         }
     }
 
@@ -181,8 +197,6 @@ public class CreateConfigTransaction extends Transaction {
     }
 
     private void deleteUndoLog() throws ExecutionException, InterruptedException {
-        maxVersion = etcdMetadata.getMaxVersion();
-        newVersion = maxVersion + 1;
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKind.METADATA.name());
         etcdClient.del(undoLogPath);
     }
@@ -195,7 +209,7 @@ public class CreateConfigTransaction extends Transaction {
         this.worker.start();
     }
 
-    private void down()  {
+    private void down() {
         if (once.isDown()) {
             return;
         }

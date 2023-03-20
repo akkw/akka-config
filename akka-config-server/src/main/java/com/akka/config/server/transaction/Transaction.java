@@ -22,15 +22,20 @@ public abstract class Transaction {
 
     protected final EtcdConfig etcdConfig;
 
+    protected final String namespace;
 
+    protected final String environment;
     protected final Once once = Once.create();
 
-    protected final Once rollbackOnce = Once.create();
-    public Transaction(EtcdClient etcdClient, String transactionId, String lockKey) {
+    protected volatile boolean undoLogWriteSuccess = false;
+
+    public Transaction(EtcdClient etcdClient, String transactionId, String lockKey, String namespace, String environment) {
         this.etcdClient = etcdClient;
         this.etcdConfig = etcdClient == null ? null : etcdClient.getConfig();
         this.transactionId = transactionId;
         this.lockKey = lockKey;
+        this.namespace = namespace;
+        this.environment = environment;
     }
 
     public String getTransactionId() {

@@ -54,6 +54,16 @@ public class TransactionManager {
         return transactionSnapshot;
     }
 
+    public TransactionResult end(String transactionId) throws InterruptedException, ExecutionException {
+        final Transaction transactionSnapshot = transactionSnapshotMap.remove(transactionId);
+        if (transactionSnapshot instanceof NOPTransaction) {
+            return buildTransactionResult(transactionSnapshot);
+        }
+        transactionSnapshot.await();
+        etcdClient.unlock(transactionSnapshot.getLockKey());
+        return buildTransactionResult(transactionSnapshot);
+    }
+
     private Transaction checkNoPaas(String namespace, String environment, TransactionKind transactionKind, byte[] contents) {
         if (namespace == null || "".equals(namespace)) {
             return new NOPTransaction(null, new IllegalArgumentException("namespace is null"));
@@ -78,16 +88,6 @@ public class TransactionManager {
         return String.format("[%s,%s,%s]", namespace, environment, transactionKind);
     }
 
-
-    public TransactionResult end(String transactionId) throws InterruptedException, ExecutionException {
-        final Transaction transactionSnapshot = transactionSnapshotMap.remove(transactionId);
-        if (transactionSnapshot instanceof NOPTransaction) {
-            return buildTransactionResult(transactionSnapshot);
-        }
-        transactionSnapshot.await();
-        etcdClient.unlock(transactionSnapshot.getLockKey());
-        return buildTransactionResult(transactionSnapshot);
-    }
 
     public TransactionResult buildTransactionResult(@NonNull Transaction transaction) {
         final TransactionResult result = new TransactionResult();
