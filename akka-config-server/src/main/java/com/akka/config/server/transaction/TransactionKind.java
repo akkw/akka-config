@@ -3,5 +3,5 @@ package com.akka.config.server.transaction;/*
  */
 
 public enum TransactionKind {
-    METADATA
+    CREATE
 }

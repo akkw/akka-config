@@ -140,7 +140,7 @@ public class CreateConfigTransaction extends Transaction {
         if (etcdMetadata == null) {
             throw new IllegalArgumentException("etcd metadata does not exist");
         }
-        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKind.METADATA.name());
+        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         final Pair<String, String> etcdMetadataPair = etcdClient.get(undoLogPath);
         if (etcdMetadataPair != null) {
             rollback(true);
@@ -192,12 +192,12 @@ public class CreateConfigTransaction extends Transaction {
         newVersion = maxVersion + 1;
         final long transactionBeginTime = System.currentTimeMillis();
         final TransactionUndoLog transactionMetadata = new TransactionUndoLog(newVersion, maxVersion, namespace, environment, transactionBeginTime);
-        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKind.METADATA.name());
+        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         etcdClient.put(undoLogPath, JSON.toJSONString(transactionMetadata));
     }
 
     private void deleteUndoLog() throws ExecutionException, InterruptedException {
-        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKind.METADATA.name());
+        final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         etcdClient.del(undoLogPath);
     }
 
