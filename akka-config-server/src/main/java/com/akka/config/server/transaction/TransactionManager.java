@@ -5,11 +5,17 @@ package com.akka.config.server.transaction;/*
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.ha.etcd.EtcdConfig;
+import com.akka.config.protocol.Metadata;
+import com.akka.config.server.transaction.protocol.ActiveConfigTransactionSnapshot;
+import com.akka.config.server.transaction.protocol.CreateConfigTransactionSnapshot;
+import com.akka.config.server.transaction.protocol.TransactionSnapshot;
+import com.akka.config.server.transaction.protocol.VerifyConfigTransactionSnapshot;
 import com.akka.config.store.Store;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -31,27 +37,50 @@ public class TransactionManager {
         this.etcdConfig = etcdClient.getConfig();
     }
 
-    public Transaction begin(String namespace, String environment, byte[] contents, TransactionKind transactionKind) {
+    public Transaction begin(TransactionSnapshot transactionSnapshot, TransactionKind transactionKind) {
+        String namespace = transactionSnapshot.getNamespace();
+        String environment = transactionSnapshot.getEnvironment();
+
         final String transactionId = getTransactionId(namespace, environment, transactionKind);
-        final Transaction checkNoPaas = checkNoPaas(namespace, environment, transactionKind, contents);
+        final Transaction checkNoPaas = checkNoPaas(namespace, environment, transactionKind);
         if (checkNoPaas != null) {
             transactionSnapshotMap.putIfAbsent(transactionId, checkNoPaas);
             return checkNoPaas;
         }
 
+        Transaction transaction = null;
+        switch (transactionKind) {
+            case CREATE:
+            case ACTIVATE:
+            case VERIFY:
+                final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.name());
+                String lockKey;
+                try {
+                    lockKey = etcdClient.lock(lockPath, 500);
+                } catch (Exception e) {
+                    logger.error("create transaction failed, namespace: {}, environment: {}, transactionKind: {},", namespace, environment, transactionKind);
+                    return new NOPTransaction(null, e);
+                }
 
-        final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.name());
-        String lockKey;
-        try {
-            lockKey = etcdClient.lock(lockPath, 500);
-        } catch (Exception e) {
-            logger.error("create transaction failed, namespace: {}, environment: {}, transactionKind: {},", namespace, environment, transactionKind);
-            return new NOPTransaction(null, e);
+                if (transactionKind == TransactionKind.CREATE) {
+                    CreateConfigTransactionSnapshot snapshot = (CreateConfigTransactionSnapshot) transactionSnapshot;
+                    transaction = new CreateConfigTransaction(namespace, environment, snapshot.getContents(), etcdClient, store, transactionId, lockKey);
+                } else if (transactionKind == TransactionKind.ACTIVATE) {
+                    ActiveConfigTransactionSnapshot snapshot = (ActiveConfigTransactionSnapshot) transactionSnapshot;
+                    String clientIp = snapshot.getClientIp();
+                    Integer version = snapshot.getVersion();
+                    List<Metadata.ClientVersion> activateVersionList = snapshot.getActivateVersionList();
+                    transaction = new ActivateConfigTransaction(etcdClient, transactionId, lockKey, namespace, environment, version, clientIp, activateVersionList);
+                } else {
+                    VerifyConfigTransactionSnapshot snapshot = (VerifyConfigTransactionSnapshot) transactionSnapshot;
+                    String clientIp = snapshot.getClientIp();
+                    Integer version = snapshot.getVersion();
+                    List<Metadata.ClientVersion> verifyVersionList = snapshot.getVerifyVersionList();
+                    transaction = new VerifyConfigTransaction(etcdClient, transactionId, lockKey, namespace, environment, version, clientIp, verifyVersionList);
+                }
+                transactionSnapshotMap.putIfAbsent(transactionId, transaction);
         }
-
-        final CreateConfigTransaction transactionSnapshot = new CreateConfigTransaction(namespace, environment, contents, etcdClient, store, transactionId, lockKey);
-        transactionSnapshotMap.putIfAbsent(transactionId, transactionSnapshot);
-        return transactionSnapshot;
+        return transaction;
     }
 
     public TransactionResult end(String transactionId) throws InterruptedException, ExecutionException {
@@ -64,7 +93,7 @@ public class TransactionManager {
         return buildTransactionResult(transactionSnapshot);
     }
 
-    private Transaction checkNoPaas(String namespace, String environment, TransactionKind transactionKind, byte[] contents) {
+    private Transaction checkNoPaas(String namespace, String environment, TransactionKind transactionKind) {
         if (namespace == null || "".equals(namespace)) {
             return new NOPTransaction(null, new IllegalArgumentException("namespace is null"));
         }
@@ -75,10 +104,6 @@ public class TransactionManager {
 
         if (transactionKind == null) {
             return new NOPTransaction(null, new IllegalArgumentException("transactionKind is null"));
-        }
-
-        if (contents == null) {
-            return new NOPTransaction(null, new IllegalArgumentException("contents is null"));
         }
 
         return null;

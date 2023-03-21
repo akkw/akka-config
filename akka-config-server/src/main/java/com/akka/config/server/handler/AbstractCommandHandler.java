@@ -29,8 +29,6 @@ abstract class AbstractCommandHandler implements CommandHandler {
     }
 
 
-
-
     protected Metadata getEtcdMetadata(String namespace, String environment) throws ExecutionException, InterruptedException {
         final Pair<String, String> metadataPair = etcdClient.get(
                 PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment));
@@ -54,22 +52,5 @@ abstract class AbstractCommandHandler implements CommandHandler {
     }
 
 
-    protected void clearUpClientVersion(Integer reqVersion, Set<Metadata.ClientVersion> metadataVerifyVersionsSet, List<Metadata.ClientVersion> requestVersionList) {
-        if (requestVersionList == null || requestVersionList.isEmpty()) {
-            return;
-        }
 
-        doClearUpClientVersion(reqVersion, metadataVerifyVersionsSet, requestVersionList);
-    }
-
-    private void doClearUpClientVersion(Integer reqVersion, Set<Metadata.ClientVersion> metadataVerifyVersionsSet, List<Metadata.ClientVersion> requestVersionList) {
-        if (reqVersion != null) {
-            requestVersionList.removeIf(reqClientVersion -> reqVersion.equals(reqClientVersion.getVersion()));
-            metadataVerifyVersionsSet.removeIf(metadataClientVersion -> reqVersion.equals(metadataClientVersion.getVersion()));
-        }
-        for (Metadata.ClientVersion clientVersion: requestVersionList) {
-            metadataVerifyVersionsSet.remove(clientVersion);
-        }
-        metadataVerifyVersionsSet.addAll(requestVersionList);
-    }
 }

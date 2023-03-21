@@ -12,6 +12,8 @@ import com.akka.config.server.transaction.Transaction;
 import com.akka.config.server.transaction.TransactionKind;
 import com.akka.config.server.transaction.TransactionManager;
 import com.akka.config.server.transaction.TransactionResult;
+import com.akka.config.server.transaction.protocol.CreateConfigTransactionSnapshot;
+import com.akka.config.server.transaction.protocol.TransactionSnapshot;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
@@ -46,8 +48,8 @@ public class CreateCommandHandler extends AbstractCommandHandler {
         if (response != null) {
             return CompletableFuture.completedFuture(response);
         }
-
-        final Transaction transaction = transactionManager.begin(namespace, environment, contents, TransactionKind.METADATA);
+        TransactionSnapshot transactionSnapshot = new CreateConfigTransactionSnapshot(namespace, environment, contents);
+        final Transaction transaction = transactionManager.begin(transactionSnapshot, TransactionKind.CREATE);
 
         transaction.executor();
 

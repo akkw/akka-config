@@ -31,9 +31,6 @@ public class CreateConfigTransaction extends Transaction {
 
     private final long timeoutMs = 200;
 
-
-    private final TransactionThread worker;
-
     private int maxVersion = -1;
 
     private int newVersion = -1;
@@ -49,7 +46,6 @@ public class CreateConfigTransaction extends Transaction {
 
     public CreateConfigTransaction(String namespace, String environment, byte[] contents, EtcdClient etcdClient, Store store, String transactionId, String lockKey) {
         super(etcdClient, transactionId, lockKey, namespace, environment);
-        this.worker = this.new TransactionThread(namespace + "_" + environment);
         this.contents = contents;
         this.store = store;
         this.countDownLatch = new CountDownLatch(1);
@@ -153,11 +149,11 @@ public class CreateConfigTransaction extends Transaction {
         }
 
         if (environment == null || "".equals(environment)) {
-            throw new IllegalArgumentException("environment is null"));
+            throw new IllegalArgumentException("environment is null");
         }
 
         if (contents == null) {
-            throw new IllegalArgumentException("contents is null"));
+            throw new IllegalArgumentException("contents is null");
         }
 
         if (etcdClient == null) {
@@ -222,13 +218,18 @@ public class CreateConfigTransaction extends Transaction {
     }
 
     @Override
-    Exception exception() {
+    public Exception exception() {
         return exception;
     }
 
     @Override
     void await() throws InterruptedException {
         countDownLatch.await();
+    }
+
+    @Override
+    public Thread newThread() {
+        return new TransactionThread(namespace + "_" + environment);
     }
 
 }
