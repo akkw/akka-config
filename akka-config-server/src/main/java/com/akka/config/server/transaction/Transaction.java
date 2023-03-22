@@ -77,6 +77,7 @@ public abstract class Transaction {
     abstract void rollback(TransactionUndoLog transactionUndoLog, boolean prev) throws ExecutionException, InterruptedException, SQLException;
 
     abstract void undoLog() throws ExecutionException, InterruptedException;
+
     protected void prepare() throws ExecutionException, InterruptedException, SQLException {
         checkNoPaas();
 
@@ -84,6 +85,7 @@ public abstract class Transaction {
         if (etcdMetadata == null) {
             throw new IllegalArgumentException("etcd metadata does not exist");
         }
+
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         final Pair<String, String> etcdMetadataPair = etcdClient.get(undoLogPath);
         if (etcdMetadataPair != null) {
@@ -196,12 +198,10 @@ public abstract class Transaction {
             super(name);
         }
 
-
         @Override
         public void run() {
 
             try {
-
                 prepare();
                 Retry.retry(Transaction.this::undoLog);
                 transaction();
