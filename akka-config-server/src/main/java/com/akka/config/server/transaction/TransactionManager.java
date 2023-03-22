@@ -6,10 +6,9 @@ import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.ha.etcd.EtcdConfig;
 import com.akka.config.protocol.Metadata;
-import com.akka.config.server.transaction.protocol.ActiveConfigTransactionSnapshot;
+import com.akka.config.server.transaction.protocol.UpdateVersionTransactionSnapshot;
 import com.akka.config.server.transaction.protocol.CreateConfigTransactionSnapshot;
 import com.akka.config.server.transaction.protocol.TransactionSnapshot;
-import com.akka.config.server.transaction.protocol.VerifyConfigTransactionSnapshot;
 import com.akka.config.store.Store;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -50,9 +49,8 @@ public class TransactionManager {
 
         Transaction transaction = null;
         switch (transactionKind) {
-            case CREATE:
-            case ACTIVATE:
-            case VERIFY:
+            case CREATE_CONFIG:
+            case ACTIVATE_VERSION:
                 final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.name());
                 String lockKey;
                 try {
@@ -62,21 +60,15 @@ public class TransactionManager {
                     return new NOPTransaction(null, e);
                 }
 
-                if (transactionKind == TransactionKind.CREATE) {
+                if (transactionKind == TransactionKind.CREATE_CONFIG) {
                     CreateConfigTransactionSnapshot snapshot = (CreateConfigTransactionSnapshot) transactionSnapshot;
                     transaction = new CreateConfigTransaction(namespace, environment, snapshot.getContents(), etcdClient, store, transactionId, lockKey);
-                } else if (transactionKind == TransactionKind.ACTIVATE) {
-                    ActiveConfigTransactionSnapshot snapshot = (ActiveConfigTransactionSnapshot) transactionSnapshot;
-                    String clientIp = snapshot.getClientIp();
-                    Integer version = snapshot.getVersion();
-                    List<Metadata.ClientVersion> activateVersionList = snapshot.getActivateVersionList();
-                    transaction = new ActivateConfigTransaction(etcdClient, transactionId, lockKey, namespace, environment, version, clientIp, activateVersionList);
                 } else {
-                    VerifyConfigTransactionSnapshot snapshot = (VerifyConfigTransactionSnapshot) transactionSnapshot;
+                    UpdateVersionTransactionSnapshot snapshot = (UpdateVersionTransactionSnapshot) transactionSnapshot;
                     String clientIp = snapshot.getClientIp();
                     Integer version = snapshot.getVersion();
-                    List<Metadata.ClientVersion> verifyVersionList = snapshot.getVerifyVersionList();
-                    transaction = new VerifyConfigTransaction(etcdClient, transactionId, lockKey, namespace, environment, version, clientIp, verifyVersionList);
+                    List<Metadata.ClientVersion> clientVersionList = snapshot.getClientVersionList();
+                    transaction = new UpdateVersionTransaction(etcdClient, transactionId, lockKey, namespace, environment, version, clientIp, clientVersionList, transactionKind);
                 }
                 transactionSnapshotMap.putIfAbsent(transactionId, transaction);
         }
@@ -121,7 +113,6 @@ public class TransactionManager {
         final boolean success = exception == null;
         result.setSuccess(success);
         if (!success) {
-            result.setMessage(exception.getMessage());
             result.setException(exception);
         }
         return result;

@@ -12,12 +12,6 @@ public class TransactionResult {
     public TransactionResult() {
     }
 
-    public TransactionResult(boolean success, Exception exception, String message) {
-        this.success = success;
-        this.exception = exception;
-        this.message = message;
-    }
-
     public Exception getException() {
         return exception;
     }
@@ -27,11 +21,7 @@ public class TransactionResult {
     }
 
     public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
+        return exception.getMessage();
     }
 
     public boolean isSuccess() {

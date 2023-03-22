@@ -49,7 +49,7 @@ public class CreateCommandHandler extends AbstractCommandHandler {
             return CompletableFuture.completedFuture(response);
         }
         TransactionSnapshot transactionSnapshot = new CreateConfigTransactionSnapshot(namespace, environment, contents);
-        final Transaction transaction = transactionManager.begin(transactionSnapshot, TransactionKind.CREATE);
+        final Transaction transaction = transactionManager.begin(transactionSnapshot, TransactionKind.CREATE_CONFIG);
 
         transaction.executor();
 
@@ -61,15 +61,5 @@ public class CreateCommandHandler extends AbstractCommandHandler {
                 CompletableFuture.completedFuture(fillResponse(response, ResponseCode.CONFIG_CREATE_ERROR, result.getMessage()));
     }
 
-    private Response checkRequest(CreateConfigRequest request) {
-        final String namespace = request.getNamespace();
-        final String environment = request.getEnvironment();
-        if (namespace == null || "".equals(namespace.trim())) {
-            return new CreateConfigResponse(ResponseCode.CONFIG_CREATE_ERROR.code(),"namespace is blank".getBytes(StandardCharsets.UTF_8));
-        }
-        if (environment == null || "".equals(environment.trim())) {
-            return new CreateConfigResponse(ResponseCode.CONFIG_CREATE_ERROR.code(),"environment is blank".getBytes(StandardCharsets.UTF_8));
-        }
-        return null;
-    }
+
 }

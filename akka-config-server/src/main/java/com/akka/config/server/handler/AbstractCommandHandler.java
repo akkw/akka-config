@@ -5,13 +5,11 @@ package com.akka.config.server.handler;/*
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.handler.CommandHandler;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
-import com.akka.config.protocol.ResponseCode;
-import com.akka.config.protocol.VerifyConfigResponse;
+import com.akka.config.protocol.*;
 import com.alibaba.fastjson2.JSON;
 import javafx.util.Pair;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -35,22 +33,15 @@ abstract class AbstractCommandHandler implements CommandHandler {
         return JSON.parseObject(metadataPair != null ? metadataPair.getValue() : null, Metadata.class);
     }
 
-
-    protected String getEtcdMetadataPath(String namespace, String environment) {
-        return PathUtils.createEnvironmentPath(etcdClient.getConfig().getPathConfig(), namespace, environment);
-    }
-
-
-    protected Response checkVersion(Integer version, Integer maxVersion) {
-        if (version < 0 || version > maxVersion) {
-            final VerifyConfigResponse response = new VerifyConfigResponse();
-            fillResponse(response, ResponseCode.VERSION_BORDER_ERROR);
-            return response;
+    protected Response checkRequest(Request request) {
+        final String namespace = request.getNamespace();
+        final String environment = request.getEnvironment();
+        if (namespace == null || "".equals(namespace.trim())) {
+            return new CreateConfigResponse(ResponseCode.CONFIG_CREATE_ERROR.code(), "namespace is blank".getBytes(StandardCharsets.UTF_8));
         }
-
+        if (environment == null || "".equals(environment.trim())) {
+            return new CreateConfigResponse(ResponseCode.CONFIG_CREATE_ERROR.code(), "environment is blank".getBytes(StandardCharsets.UTF_8));
+        }
         return null;
     }
-
-
-
 }

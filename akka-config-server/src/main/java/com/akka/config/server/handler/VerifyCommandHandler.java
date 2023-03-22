@@ -3,15 +3,18 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
-import com.akka.config.protocol.VerifyConfigRequest;
-import com.akka.config.protocol.VerifyConfigResponse;
+import com.akka.config.protocol.*;
 import com.akka.config.server.core.MetadataManager;
+import com.akka.config.server.transaction.Transaction;
+import com.akka.config.server.transaction.TransactionKind;
+import com.akka.config.server.transaction.TransactionManager;
+import com.akka.config.server.transaction.TransactionResult;
+import com.akka.config.server.transaction.protocol.UpdateVersionTransactionSnapshot;
 import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -21,11 +24,13 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
     private final Store store;
     private final MetadataManager metadataManager;
 
+    private final TransactionManager transactionManager;
 
-    public VerifyCommandHandler(EtcdClient etcdClient, Store store, MetadataManager metadataManager) {
+    public VerifyCommandHandler(EtcdClient etcdClient, Store store, MetadataManager metadataManager, TransactionManager transactionManager) {
         super(etcdClient);
         this.store = store;
         this.metadataManager = metadataManager;
+        this.transactionManager = transactionManager;
     }
 
 
@@ -34,49 +39,21 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
         final byte[] body = command.getBody();
         final VerifyConfigRequest request = JSON.parseObject(body, VerifyConfigRequest.class);
 
-        final String namespace = request.getNamespace();
-        final String environment = request.getEnvironment();
-        final Integer reqVersion = request.getVersion();
-
-        final Metadata etcdMetadata = getEtcdMetadata(namespace, environment);
-
-        final Response noPassResp = checkRequestNoPass(etcdMetadata, request);
-
-        if (noPassResp != null) {
-            return CompletableFuture.completedFuture(noPassResp);
-        }
-
-        clearUpClientVersion(reqVersion, etcdMetadata.getVerifyVersions(), request.getVerifyVersionList());
-        etcdMetadata.setVerifyVersion(reqVersion);
-        etcdClient.put(getEtcdMetadataPath(namespace, environment), JSON.toJSONString(etcdMetadata));
-        return CompletableFuture.completedFuture(new VerifyConfigResponse());
-    }
-
-
-    private Response checkRequestNoPass(Metadata metadata, VerifyConfigRequest request) {
-
-        final Integer reqVersion = request.getVersion();
-        final List<Metadata.ClientVersion> reqVerifyVersionList = request.getVerifyVersionList();
-
-        if (reqVersion == null || reqVerifyVersionList == null) {
-            return null;
-        }
-
-        final int maxVersion = metadata.getMaxVersion();
-
-
-        Response response = checkVersion(reqVersion, maxVersion);
+        Response response = checkRequest(request);
         if (response != null) {
-            return response;
+            return CompletableFuture.completedFuture(response);
         }
 
-        for (Metadata.ClientVersion reqClientVersion : reqVerifyVersionList) {
-            response = checkVersion(reqClientVersion.getVersion(), maxVersion);
-            if (response != null) {
-                return response;
-            }
-        }
-        return null;
+        UpdateVersionTransactionSnapshot transactionSnapshot = new UpdateVersionTransactionSnapshot(request.getNamespace(),
+                request.getEnvironment(), request.getVersion(), request.getClientIp(), request.getVerifyVersionList());
+
+        Transaction transaction = transactionManager.begin(transactionSnapshot, TransactionKind.VERIFY_VERSION);
+
+        transaction.executor();
+
+        TransactionResult result = transactionManager.end(transaction.getTransactionId());
+        response = new VerifyConfigResponse();
+        return result.isSuccess() ? CompletableFuture.completedFuture(fillResponse(response, ResponseCode.SUCCESS)) :
+                CompletableFuture.completedFuture(fillResponse(response, ResponseCode.VERIFY_VERSION_ERROR, result.getMessage()));
     }
-
 }

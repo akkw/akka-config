@@ -3,7 +3,7 @@ package com.akka.config.server.transaction;/*
  */
 
 public enum TransactionKind {
-    CREATE,
-    ACTIVATE,
-    VERIFY
+    CREATE_CONFIG,
+    ACTIVATE_VERSION,
+    VERIFY_VERSION
 }

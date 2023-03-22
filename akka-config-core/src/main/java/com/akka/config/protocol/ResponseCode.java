@@ -13,7 +13,11 @@ package com.akka.config.protocol;/*
     CONFIG_READ_ERROR(306,""),
     CONFIG_NOT_EXIST(307,""),
     VERSION_BORDER_ERROR(308,""),
-    METADATA_NOT_EXIST(309,"");
+    METADATA_NOT_EXIST(309,""),
+
+    ACTIVE_VERSION_ERROR(310, ""),
+    VERIFY_VERSION_ERROR(311, "");
+
 
 
     private final int code;
