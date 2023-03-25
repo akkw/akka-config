@@ -2,11 +2,13 @@ package com.akka.config.store.mysql.utils;/*
     create qiangzhiwei time 2023/2/10
  */
 
+import com.akka.tools.api.LifeCycle;
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -18,33 +20,63 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MysqlUtils {
+public class MysqlUtils implements LifeCycle {
     private static final Logger logger = LoggerFactory.getLogger(MysqlUtils.class);
     private static DataSource dataSource;
     private static Connection connection;
 
+    private final Properties properties;
+    private final AtomicBoolean connected = new AtomicBoolean(false);
 
-    static {
-        try {
-            Properties properties = new Properties();
-            properties.load(MysqlUtils.class.getClassLoader().getResourceAsStream("druid.properties"));
-            dataSource = DruidDataSourceFactory.createDataSource(properties);
-            connection = dataSource.getConnection();
-        } catch (Exception e) {
-            logger.error("init mysql connection error", e);
+    private final AtomicBoolean started = new AtomicBoolean(false);
+    public MysqlUtils() {
+        this.properties = new Properties();
+    }
+
+    @Override
+    public void start() {
+        if (!started.get()) {
+            try {
+                properties.load(MysqlUtils.class.getClassLoader().getResourceAsStream("druid.properties"));
+            } catch (IOException e) {
+                logger.error("Failed to read the database configuration file", e);
+            }
+            initContent();
         }
     }
 
 
-    public static int mysqlDml(FillStatement function) throws SQLException {
+    public void initContent() {
+        if (connected.get()) {
+            return;
+        }
+        try {
+            dataSource = DruidDataSourceFactory.createDataSource(properties);
+            connection = dataSource.getConnection();
+        } catch (Exception e) {
+            logger.error("Failed to initialize the database connection", e);
+            connected.compareAndSet(true, false);
+        }
+
+        connected.compareAndSet(false, true);
+    }
+    @Override
+    public void stop() {
+
+    }
+
+
+    public int mysqlDml(FillStatement function) throws SQLException {
+
         try (PreparedStatement statement = dmlPrepared(function)) {
             function.fillStatement(statement);
             return statement.executeUpdate();
         }
     }
 
-    public static int mysqlDml(Map<Integer, Object> data, SqlFunction function) throws SQLException {
+    public int mysqlDml(Map<Integer, Object> data, SqlFunction function) throws SQLException {
         try (PreparedStatement statement = dmlPrepared(function)) {
             for (int i = 0; i < data.size(); i++) {
                 statement.setObject(i + 1, data.get(i + 1));
@@ -53,7 +85,7 @@ public class MysqlUtils {
         }
     }
 
-    private static PreparedStatement dmlPrepared(SqlFunction function) throws SQLException {
+    private PreparedStatement dmlPrepared(SqlFunction function) throws SQLException {
         if (function == null) {
             throw new NullPointerException("insert function is null!!!");
         }
@@ -61,11 +93,12 @@ public class MysqlUtils {
         if (sql == null || sql.trim().length() == 0) {
             throw new IllegalArgumentException("sql verification fails");
         }
+        initContent();
         return connection.prepareStatement(sql);
     }
 
 
-    public static void mysqlSelect(ResultFunction function) throws SQLException {
+    public void mysqlSelect(ResultFunction function) throws SQLException {
         PreparedStatement statement = null;
         try {
             final String sql = function.sql();
@@ -83,7 +116,7 @@ public class MysqlUtils {
     }
 
 
-    public static <T> List<T> mysqlSelect(Map<Integer, Object> data, SqlFunction function, Class<T> tClass, List<String> excludeColumns) throws SQLException, InstantiationException, IllegalAccessException, NoSuchFieldException {
+    public <T> List<T> mysqlSelect(Map<Integer, Object> data, SqlFunction function, Class<T> tClass, List<String> excludeColumns) throws SQLException, InstantiationException, IllegalAccessException, NoSuchFieldException {
         PreparedStatement statement = null;
         try {
             final String sql = function.sql();
@@ -121,7 +154,7 @@ public class MysqlUtils {
         }
     }
 
-    private static void select(ResultFunction function, PreparedStatement statement) throws SQLException {
+    private void select(ResultFunction function, PreparedStatement statement) throws SQLException {
         final ResultSet resultSet = statement.executeQuery();
         final ResultSetMetaData resMetadata = resultSet.getMetaData();
         final int columnCount = resMetadata.getColumnCount();
@@ -138,7 +171,7 @@ public class MysqlUtils {
         function.result(resultList);
     }
 
-    private static String toCamelCase(String s) {
+    private String toCamelCase(String s) {
         if (s == null) {
             return null;
         }

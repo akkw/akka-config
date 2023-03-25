@@ -116,6 +116,7 @@ public class ServerController implements LifeCycle {
         this.serverNetwork.registerProcessor(CommandCode.READ_ALL_CONFIG, processor);
         this.serverNetwork.start();
         this.etcdClient.start();
+        this.configStore.start();
         initHandler();
     }
 
@@ -146,11 +147,9 @@ public class ServerController implements LifeCycle {
         requestHandlerMap.put(CommandCode.DELETE, new DeleteCommandHandler(this.etcdClient, this.configStore, metadataManager));
         requestHandlerMap.put(CommandCode.READ, new ReadCommandHandler(this.configStore));
         requestHandlerMap.put(CommandCode.METADATA, new MetadataCommandHandler(etcdClient, metadataManager));
-        requestHandlerMap.put(CommandCode.ACTIVATE, new ActivateCommandHandler(this.etcdClient, this.configStore, metadataManager));
-        requestHandlerMap.put(CommandCode.VERIFY, new VerifyCommandHandler(this. etcdClient, this.configStore, metadataManager));
+        requestHandlerMap.put(CommandCode.ACTIVATE, new ActivateCommandHandler(this.etcdClient, this.configStore, metadataManager, transactionManager));
+        requestHandlerMap.put(CommandCode.VERIFY, new VerifyCommandHandler(this. etcdClient, this.configStore, metadataManager , transactionManager));
         requestHandlerMap.put(CommandCode.CREATE_NAMESPACE, new CreateNamespaceHandler(this.etcdClient));
-        requestHandlerMap.put(CommandCode.ACTIVATE_MULTI, new ActivateMultiCommandHandler(this.etcdClient));
-        requestHandlerMap.put(CommandCode.VERIFY_MULTI_CONFIG, new VerifyMultiCommandHandler(this.etcdClient));
         requestHandlerMap.put(CommandCode.READ_ALL_CONFIG, new MultiReadCommandHandler(this.etcdClient, this.configStore));
     }
 

@@ -18,17 +18,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class TransactionManager {
 
     private final static Logger logger = LoggerFactory.getLogger(TransactionManager.class);
-    private final Map<String, Transaction> transactionSnapshotMap = new ConcurrentHashMap<>();
+    private final Map<Long, Transaction> transactionSnapshotMap = new ConcurrentHashMap<>();
 
     private final EtcdClient etcdClient;
 
     private final EtcdConfig etcdConfig;
 
     private final Store store;
+
+    private final AtomicLong transactionId = new AtomicLong();
 
     public TransactionManager(EtcdClient etcdClient, Store store) {
         this.store = store;
@@ -40,8 +44,8 @@ public class TransactionManager {
         String namespace = transactionSnapshot.getNamespace();
         String environment = transactionSnapshot.getEnvironment();
 
-        final String transactionId = getTransactionId(namespace, environment, transactionKind);
-        final Transaction checkNoPaas = checkNoPaas(namespace, environment, transactionKind);
+        final long transactionId = getTransactionId();
+        final Transaction checkNoPaas = checkNoPaas(namespace, environment, transactionKind, transactionId);
         if (checkNoPaas != null) {
             transactionSnapshotMap.putIfAbsent(transactionId, checkNoPaas);
             return checkNoPaas;
@@ -51,13 +55,16 @@ public class TransactionManager {
         switch (transactionKind) {
             case CREATE_CONFIG:
             case ACTIVATE_VERSION:
-                final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.name());
+                final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.kind());
                 String lockKey;
                 try {
                     lockKey = etcdClient.lock(lockPath, 500);
                 } catch (Exception e) {
-                    logger.error("create transaction failed, namespace: {}, environment: {}, transactionKind: {},", namespace, environment, transactionKind);
-                    return new NOPTransaction(null, e);
+                    logger.error("create transaction lock failed, namespace: {}, environment: {}, transactionKind: {},",
+                            namespace, environment, transactionKind, e);
+                    final NOPTransaction nopTransaction = new NOPTransaction(transactionId, null, e);
+                    transactionSnapshotMap.put(transactionId, nopTransaction);
+                    return nopTransaction;
                 }
 
                 if (transactionKind == TransactionKind.CREATE_CONFIG) {
@@ -75,7 +82,7 @@ public class TransactionManager {
         return transaction;
     }
 
-    public TransactionResult end(String transactionId) throws InterruptedException, ExecutionException {
+    public TransactionResult end(long transactionId) throws InterruptedException, ExecutionException, TimeoutException {
         final Transaction transactionSnapshot = transactionSnapshotMap.remove(transactionId);
         if (transactionSnapshot instanceof NOPTransaction) {
             return buildTransactionResult(transactionSnapshot);
@@ -85,24 +92,24 @@ public class TransactionManager {
         return buildTransactionResult(transactionSnapshot);
     }
 
-    private Transaction checkNoPaas(String namespace, String environment, TransactionKind transactionKind) {
+    private Transaction checkNoPaas(String namespace, String environment, TransactionKind transactionKind, long transactionId) {
         if (namespace == null || "".equals(namespace)) {
-            return new NOPTransaction(null, new IllegalArgumentException("namespace is null"));
+            return new NOPTransaction(transactionId, null, new IllegalArgumentException("namespace is null"));
         }
 
         if (environment == null || "".equals(environment)) {
-            return new NOPTransaction(null, new IllegalArgumentException("environment is null"));
+            return new NOPTransaction(transactionId, null, new IllegalArgumentException("environment is null"));
         }
 
         if (transactionKind == null) {
-            return new NOPTransaction(null, new IllegalArgumentException("transactionKind is null"));
+            return new NOPTransaction(transactionId, null, new IllegalArgumentException("transactionKind is null"));
         }
 
         return null;
     }
 
-    private String getTransactionId(String namespace, String environment, TransactionKind transactionKind) {
-        return String.format("[%s,%s,%s]", namespace, environment, transactionKind);
+    private long getTransactionId() {
+        return transactionId.getAndIncrement();
     }
 
 

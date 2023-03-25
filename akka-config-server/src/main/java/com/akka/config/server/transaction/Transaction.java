@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public abstract class Transaction {
 
     private final static Logger logger = LoggerFactory.getLogger(Transaction.class);
 
-    private String transactionId;
+    private long transactionId;
 
     private String lockKey;
 
@@ -46,7 +47,7 @@ public abstract class Transaction {
 
     protected TransactionUndoLog transactionUndoLog;
 
-    public Transaction(EtcdClient etcdClient, String transactionId, String lockKey, String namespace, String environment) {
+    public Transaction(EtcdClient etcdClient, long transactionId, String lockKey, String namespace, String environment) {
         this.etcdClient = etcdClient;
         this.etcdConfig = etcdClient == null ? null : etcdClient.getConfig();
         this.transactionId = transactionId;
@@ -57,7 +58,7 @@ public abstract class Transaction {
         this.countDownLatch = new CountDownLatch(1);
     }
 
-    public String getTransactionId() {
+    public long getTransactionId() {
         return transactionId;
     }
 
@@ -69,28 +70,22 @@ public abstract class Transaction {
         return lockKey;
     }
 
-    public void setLockKey(String lockKey) {
-        this.lockKey = lockKey;
-    }
 
+    abstract void rollback(TransactionUndoLog transactionUndoLog, boolean prev);
 
-    abstract void rollback(TransactionUndoLog transactionUndoLog, boolean prev) throws ExecutionException, InterruptedException, SQLException;
+    abstract void undoLog() throws ExecutionException, InterruptedException, TimeoutException;
 
-    abstract void undoLog() throws ExecutionException, InterruptedException;
-
-    protected void prepare() throws ExecutionException, InterruptedException, SQLException {
+    protected void prepare() throws ExecutionException, InterruptedException, SQLException, TimeoutException {
         checkNoPaas();
-
-        etcdMetadata = metadata(namespace, environment);
-        if (etcdMetadata == null) {
-            throw new IllegalArgumentException("etcd metadata does not exist");
-        }
-
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         final Pair<String, String> etcdMetadataPair = etcdClient.get(undoLogPath);
         if (etcdMetadataPair != null) {
             transactionUndoLog = JSON.parseObject(etcdMetadataPair.getValue(), TransactionUndoLog.class);
             rollback(transactionUndoLog, true);
+        }
+        etcdMetadata = metadata(namespace, environment);
+        if (etcdMetadata == null) {
+            throw new IllegalArgumentException("etcd metadata does not exist");
         }
     }
 
@@ -123,7 +118,7 @@ public abstract class Transaction {
         return exception;
     }
 
-    private void deleteUndoLog() throws ExecutionException, InterruptedException {
+    private void deleteUndoLog() throws ExecutionException, InterruptedException, TimeoutException {
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         etcdClient.del(undoLogPath);
     }
@@ -149,7 +144,7 @@ public abstract class Transaction {
         return JSON.parseObject(etcdMetadataPair.getValue(), Metadata.class);
     }
 
-    protected void writeEtcdMetadata(Metadata metadata) throws ExecutionException, InterruptedException {
+    protected void writeEtcdMetadata(Metadata metadata) throws ExecutionException, InterruptedException, TimeoutException {
         etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(metadata));
     }
 
@@ -206,6 +201,7 @@ public abstract class Transaction {
                 Retry.retry(Transaction.this::undoLog);
                 transaction();
             } catch (Exception e) {
+                logger.error("Transaction executor failed, namespace: {}, environment: {}", namespace, environment, e);
                 try {
                     rollback(transactionUndoLog, false);
                 } catch (Exception exc) {

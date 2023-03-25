@@ -3,7 +3,16 @@ package com.akka.config.server.transaction;/*
  */
 
 public enum TransactionKind {
-    CREATE_CONFIG,
-    ACTIVATE_VERSION,
-    VERIFY_VERSION
+    CREATE_CONFIG("metadata"),
+    ACTIVATE_VERSION("metadata"),
+    VERIFY_VERSION("metadata");
+
+    private final String kind;
+    TransactionKind(String kind) {
+        this.kind = kind;
+    }
+
+    public String kind() {
+        return kind;
+    }
 }

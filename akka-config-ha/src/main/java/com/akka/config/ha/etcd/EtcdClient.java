@@ -24,6 +24,7 @@ import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
 import io.etcd.jetcd.op.Cmp;
 import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.op.Op;
+import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
 import io.etcd.jetcd.watch.WatchEvent;
@@ -70,7 +71,8 @@ public class EtcdClient implements LifeCycle {
         this.clientBuilder = Client.builder()
                 .endpoints(config.getEndpoints().split(","))
                 .user(createByteSequence(config.getUsername()))
-                .password(createByteSequence(config.getPassword()));
+                .password(createByteSequence(config.getPassword()))
+                .waitForReady(false);
     }
 
 
@@ -131,7 +133,7 @@ public class EtcdClient implements LifeCycle {
         return lockClient.lock(lockKey, leaseId).get().getKey().toString();
     }
 
-    public String unlock(String key) throws ExecutionException, InterruptedException {
+    public String unlock(String key) throws ExecutionException, InterruptedException, TimeoutException {
 
         if (key == null || "".equals(key)) {
             throw new NullPointerException();
@@ -142,7 +144,7 @@ public class EtcdClient implements LifeCycle {
         }
 
         ByteSequence lockKey = createByteSequence(key);
-        return lockClient.unlock(lockKey).get().toString();
+        return lockClient.unlock(lockKey).get(getConfig().getTimeoutMs(), TimeUnit.MILLISECONDS).toString();
     }
 
 
@@ -251,12 +253,12 @@ public class EtcdClient implements LifeCycle {
         };
     }
 
-    public void put(String key, String value) throws ExecutionException, InterruptedException {
-        this.kvClient.put(createByteSequence(key), createByteSequence(value)).get();
+    public void put(String key, String value) throws ExecutionException, InterruptedException, TimeoutException {
+        this.kvClient.put(createByteSequence(key), createByteSequence(value)).get(getConfig().getTimeoutMs(), TimeUnit.MILLISECONDS);
     }
 
-    public void del(String key) throws ExecutionException, InterruptedException {
-        this.kvClient.delete(createByteSequence(key)).get();
+    public void del(String key) throws ExecutionException, InterruptedException, TimeoutException {
+        this.kvClient.delete(createByteSequence(key)).get(config.getTimeoutMs(), TimeUnit.MILLISECONDS);
     }
 
     public boolean putIfAbsent(String key, String value) throws ExecutionException, InterruptedException {
@@ -342,19 +344,27 @@ public class EtcdClient implements LifeCycle {
                     config.getCreateLeaseIdTimeout(), TimeUnit.MILLISECONDS);
             leaseId = grantFuture.get().getID();
             leaseClient.keepAlive(leaseId, new StreamObserver<LeaseKeepAliveResponse>() {
+                long intervalTime = 30 * 10;
+                long lastPrintTime = System.currentTimeMillis();
                 @Override
                 public void onNext(LeaseKeepAliveResponse value) {
-                    logger.info("leaseId keepAlive, leaseId: {}, ttl: {}", value.getID(), value.getTTL());
+                    if (System.currentTimeMillis() - lastPrintTime > intervalTime) {
+                        logger.info("leaseId keepAlive, leaseId: {}, ttl: {}", value.getID(), value.getTTL());
+                    }
                 }
 
                 @Override
                 public void onError(Throwable t) {
+                    leaseClient.revoke(leaseId);
+                    leaseId = null;
                     logger.error("leaseId keepAlive failed", t);
                 }
 
                 @Override
                 public void onCompleted() {
-
+                    leaseClient.revoke(leaseId);
+                    logger.info("leaseId Completed: {}", Long.toHexString(leaseId));
+                    leaseId = null;
                 }
             });
             return;

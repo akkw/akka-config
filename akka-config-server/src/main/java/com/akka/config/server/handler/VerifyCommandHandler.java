@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class VerifyCommandHandler extends AbstractCommandHandler {
 
@@ -35,7 +36,7 @@ public class VerifyCommandHandler extends AbstractCommandHandler {
 
 
     @Override
-    public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
+    public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException, TimeoutException {
         final byte[] body = command.getBody();
         final VerifyConfigRequest request = JSON.parseObject(body, VerifyConfigRequest.class);
 

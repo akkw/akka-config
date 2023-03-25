@@ -27,7 +27,7 @@ public class CreateConfigTransaction extends Transaction {
 
     private final byte[] contents;
 
-    private final long timeoutMs = 200;
+    private final long timeoutMs = 600000;
 
     private int maxVersion = -1;
 
@@ -41,7 +41,8 @@ public class CreateConfigTransaction extends Transaction {
 
 
 
-    public CreateConfigTransaction(String namespace, String environment, byte[] contents, EtcdClient etcdClient, Store store, String transactionId, String lockKey) {
+    public CreateConfigTransaction(String namespace, String environment, byte[] contents, EtcdClient etcdClient,
+                                   Store store, long transactionId, String lockKey) {
         super(etcdClient, transactionId, lockKey, namespace, environment);
         this.contents = contents;
         this.store = store;
@@ -66,10 +67,16 @@ public class CreateConfigTransaction extends Transaction {
     }
 
 
-    void rollback(TransactionUndoLog transactionUndoLog, boolean prev) throws ExecutionException, InterruptedException, SQLException {
+    void rollback(TransactionUndoLog transactionUndoLog, boolean prev) {
         if (undoLogWriteSuccess || prev) {
-            etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(transactionUndoLog.getMetadata()));
-            store.delete(namespace, environment, transactionUndoLog.getNewVersion());
+            final String etcdMetadata = JSON.toJSONString(transactionUndoLog.getMetadata());
+            try {
+                logger.debug("rollback etcdMetadata: {}", etcdMetadata);
+                etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), etcdMetadata);
+            } catch (Exception ignored) {}
+            try {
+                store.delete(namespace, environment, transactionUndoLog.getNewVersion());
+            } catch (Exception ignored) {}
         }
     }
 
@@ -98,14 +105,16 @@ public class CreateConfigTransaction extends Transaction {
                         + namespace + "environment: " + environment);
                 configFuture.cancel(true);
                 metadataFuture.cancel(true);
-                rollback(transactionUndoLog, false);
                 break;
             }
             TimeUnit.MILLISECONDS.sleep(200);
         }
+        // In order to throw an exception
+        configFuture.get();
+        metadataFuture.get();
     }
 
-    private void writeMetadata() throws ExecutionException, InterruptedException {
+    private void writeMetadata() throws ExecutionException, InterruptedException, java.util.concurrent.TimeoutException {
         final Metadata copyMetadata = etcdMetadata.copy();
         copyMetadata.setMaxVersion(newVersion);
         writeEtcdMetadata(copyMetadata);
@@ -117,13 +126,13 @@ public class CreateConfigTransaction extends Transaction {
         store.write(namespace, environment, newVersion, contents);
     }
 
-    protected void undoLog() throws ExecutionException, InterruptedException {
+    protected void undoLog() throws ExecutionException, InterruptedException, java.util.concurrent.TimeoutException {
         writeUndoLog();
         undoLogWriteSuccess = true;
     }
 
 
-    private void writeUndoLog() throws ExecutionException, InterruptedException {
+    private void writeUndoLog() throws ExecutionException, InterruptedException, java.util.concurrent.TimeoutException {
         maxVersion = etcdMetadata.getMaxVersion();
         newVersion = maxVersion + 1;
         transactionUndoLog = new TransactionUndoLog(newVersion, etcdMetadata, beginTimeMs);

@@ -13,7 +13,7 @@ public interface Store extends LifeCycle {
 
     void write(String namespace,String environment, int version, byte[] content) throws SQLException;
 
-    void delete(String namespace,String environment, int version) throws SQLException;
+    int delete(String namespace,String environment, int version) throws SQLException;
 
     void rollback();
 

@@ -14,6 +14,8 @@ import java.util.Map;
 
 public class MysqlStore implements Store {
 
+    private final MysqlUtils mysqlUtils = new MysqlUtils();
+
     @Override
     public void write(String namespace, String env, int version, byte[] content) throws SQLException {
         Map<Integer, Object> data = new HashMap<>();
@@ -22,16 +24,16 @@ public class MysqlStore implements Store {
         data.put(3, version);
         data.put(4, content);
         // check version >= 0
-        MysqlUtils.mysqlDml(data, () -> "insert into config(namespace, environment, version, content) values (?,?,?,?)");
+        mysqlUtils.mysqlDml(data, () -> "insert into config(namespace, environment, version, content) values (?,?,?,?)");
     }
 
     @Override
-    public void delete(String namespace, String environment, int version) throws SQLException {
+    public int delete(String namespace, String environment, int version) throws SQLException {
         Map<Integer, Object> data = new HashMap<>();
         data.put(1, namespace);
         data.put(2, environment);
         data.put(3, version);
-        MysqlUtils.mysqlDml(data, () -> "delete from config where namespace=? and environment=? and version = ?");
+        return mysqlUtils.mysqlDml(data, () -> "delete from config where namespace=? and environment=? and version = ?");
     }
 
 
@@ -48,7 +50,7 @@ public class MysqlStore implements Store {
         data.put(3, version);
         final ArrayList<String> excludeColumnList = new ArrayList<>();
         excludeColumnList.add("id");
-        final List<MysqlConfigModel> mysqlConfigModels = MysqlUtils.mysqlSelect(data,
+        final List<MysqlConfigModel> mysqlConfigModels = mysqlUtils.mysqlSelect(data,
             () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version = ?",
             MysqlConfigModel.class, excludeColumnList);
 
@@ -64,7 +66,7 @@ public class MysqlStore implements Store {
         data.put(4, maxVersion);
         final ArrayList<String> excludeColumnList = new ArrayList<>();
         excludeColumnList.add("id");
-        final List<MysqlConfigModel> mysqlConfigModelList = MysqlUtils.mysqlSelect(data,
+        final List<MysqlConfigModel> mysqlConfigModelList = mysqlUtils.mysqlSelect(data,
             () -> "select namespace,environment,version,content from config where namespace=? and environment=? and version >= ? and version <= ?",
             MysqlConfigModel.class, excludeColumnList);
 
@@ -73,7 +75,7 @@ public class MysqlStore implements Store {
 
     @Override
     public void start() {
-
+        mysqlUtils.start();
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class EtcdClientTest {
 
@@ -30,7 +31,7 @@ public class EtcdClientTest {
     }
 
     @org.junit.Test
-    public void putIfAbsent() throws ExecutionException, InterruptedException {
+    public void putIfAbsent() throws ExecutionException, InterruptedException, TimeoutException {
         etcdClient.del("/root/akka/metadata/akka-name/environment/dev2");
         boolean result = etcdClient.putIfAbsent("/root/akka/metadata/akka-name/environment/dev2", "1");
         Assert.assertTrue(result);

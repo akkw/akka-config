@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public interface CommandHandler {
 
@@ -25,5 +26,5 @@ public interface CommandHandler {
         return response;
     }
 
-    CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException, SQLException, NoSuchFieldException, InstantiationException, IllegalAccessException;
+    CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException, SQLException, NoSuchFieldException, InstantiationException, IllegalAccessException, TimeoutException;
 }

@@ -21,6 +21,7 @@ import com.alibaba.fastjson2.JSON;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class CreateCommandHandler extends AbstractCommandHandler {
 
@@ -36,7 +37,7 @@ public class CreateCommandHandler extends AbstractCommandHandler {
     }
 
     @Override
-    public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException {
+    public CompletableFuture<Response> commandHandler(Command command) throws ExecutionException, InterruptedException, TimeoutException {
         final CreateConfigRequest createConfigRequest = JSON.parseObject(command.getBody(), CreateConfigRequest.class);
         final byte[] contents = createConfigRequest.getContents();
 

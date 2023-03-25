@@ -4,6 +4,7 @@ import com.akka.config.store.mysql.utils.FillStatement;
 import com.akka.config.store.mysql.utils.MysqlUtils;
 import com.akka.config.store.mysql.utils.ResultFunction;
 import com.akka.config.store.mysql.utils.SqlFunction;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.sql.rowset.serial.SerialBlob;
@@ -20,9 +21,15 @@ import java.util.Map;
  */public class MysqlUtilsTest {
 
 
+     private final MysqlUtils mysqlUtils = new MysqlUtils();
+
+    @Before
+    public void before() {
+        mysqlUtils.start();
+    }
     @Test
     public void mysqlDml() throws SQLException {
-        MysqlUtils.mysqlDml(new FillStatement() {
+        mysqlUtils.mysqlDml(new FillStatement() {
             @Override
             public String sql() {
                 return "insert into config(namespace, environment, version, content) values (?,?,?,?)";
@@ -46,7 +53,7 @@ import java.util.Map;
         data.put(3, 5);
         data.put(4, new SerialBlob("mysqlUtils-test".getBytes(StandardCharsets.UTF_8)));
 
-        MysqlUtils.mysqlDml(data, new SqlFunction() {
+        mysqlUtils.mysqlDml(data, new SqlFunction() {
             @Override
             public String sql() {
                 return "insert into config(namespace, environment, version, content) values (?,?,?,?)";
@@ -56,7 +63,7 @@ import java.util.Map;
 
     @Test
     public void mysqlSelect() throws SQLException {
-        MysqlUtils.mysqlSelect(new ResultFunction() {
+        mysqlUtils.mysqlSelect(new ResultFunction() {
             @Override
             public String sql() {
                 return "select * from config where id = ?";
@@ -80,7 +87,7 @@ import java.util.Map;
         data.put(1, 1);
         List<String> list = new ArrayList<>();
         list.add("id");
-        final List<MockConfig> mockConfigs = MysqlUtils.mysqlSelect(data, new SqlFunction() {
+        final List<MockConfig> mockConfigs = mysqlUtils.mysqlSelect(data, new SqlFunction() {
             @Override
             public String sql() {
                 return "select * from config where id = ?";

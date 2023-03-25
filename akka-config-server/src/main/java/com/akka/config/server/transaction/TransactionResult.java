@@ -2,6 +2,8 @@ package com.akka.config.server.transaction;/*
     create qiangzhiwei time 2023/3/18
  */
 
+import java.util.Arrays;
+
 public class TransactionResult {
     private boolean success;
 
@@ -21,7 +23,7 @@ public class TransactionResult {
     }
 
     public String getMessage() {
-        return exception.getMessage();
+        return exception.getMessage() != null ? exception.getMessage() : Arrays.toString(exception.getStackTrace());
     }
 
     public boolean isSuccess() {

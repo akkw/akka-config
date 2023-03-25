@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 public class UpdateVersionTransaction extends Transaction {
 
@@ -23,7 +24,7 @@ public class UpdateVersionTransaction extends Transaction {
     private final List<Metadata.ClientVersion> clientVersionList;
 
     private final TransactionKind transactionKind;
-    public UpdateVersionTransaction(EtcdClient etcdClient, String transactionId, String lockKey, String namespace,
+    public UpdateVersionTransaction(EtcdClient etcdClient, long transactionId, String lockKey, String namespace,
                                     String environment, Integer version, String clientIp,
                                     List<Metadata.ClientVersion> clientVersionList, TransactionKind transactionKind) {
 
@@ -35,19 +36,21 @@ public class UpdateVersionTransaction extends Transaction {
     }
 
     @Override
-    void rollback(TransactionUndoLog transactionUndoLog, boolean prev) throws ExecutionException, InterruptedException {
+    void rollback(TransactionUndoLog transactionUndoLog, boolean prev) {
         if (undoLogWriteSuccess || prev) {
-            etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(transactionUndoLog.getMetadata()));
+            try {
+                etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(transactionUndoLog.getMetadata()));
+            } catch (Exception ignored) {}
         }
     }
 
     @Override
-    void undoLog() throws ExecutionException, InterruptedException {
+    void undoLog() throws ExecutionException, InterruptedException, TimeoutException {
         writeUndoLog();
         undoLogWriteSuccess = true;
     }
 
-    private void writeUndoLog() throws ExecutionException, InterruptedException {
+    private void writeUndoLog() throws ExecutionException, InterruptedException, TimeoutException {
         transactionUndoLog = new TransactionUndoLog(etcdMetadata, beginTimeMs);
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         etcdClient.put(undoLogPath, JSON.toJSONString(transactionUndoLog));
@@ -68,7 +71,7 @@ public class UpdateVersionTransaction extends Transaction {
         Retry.retry(UpdateVersionTransaction.this::writeMetadata);
     }
 
-    private void writeMetadata() throws ExecutionException, InterruptedException {
+    private void writeMetadata() throws ExecutionException, InterruptedException, TimeoutException {
         writeEtcdMetadata(etcdMetadata);
     }
 
