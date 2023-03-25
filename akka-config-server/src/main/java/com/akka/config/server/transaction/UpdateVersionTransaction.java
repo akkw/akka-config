@@ -71,6 +71,11 @@ public class UpdateVersionTransaction extends Transaction {
         Retry.retry(UpdateVersionTransaction.this::writeMetadata);
     }
 
+    @Override
+    Object getResult() {
+        return null;
+    }
+
     private void writeMetadata() throws ExecutionException, InterruptedException, TimeoutException {
         writeEtcdMetadata(etcdMetadata);
     }

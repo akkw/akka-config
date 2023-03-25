@@ -122,6 +122,8 @@ public class TransactionManager {
         result.setSuccess(success);
         if (!success) {
             result.setException(exception);
+        } else {
+            result.setResult(transaction.getResult());
         }
         return result;
     }

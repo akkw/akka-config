@@ -27,13 +27,13 @@ public class CreateConfigTransaction extends Transaction {
 
     private final byte[] contents;
 
-    private final long timeoutMs = 600000;
+    private final long timeoutMs = 200;
 
-    private int maxVersion = -1;
+    private Integer maxVersion = -1;
 
-    private int newVersion = -1;
+    private Integer newVersion;
 
-    private ThreadPoolExecutor transactionExecutor;
+    private final ThreadPoolExecutor transactionExecutor;
 
     private final Store store;
 
@@ -112,6 +112,11 @@ public class CreateConfigTransaction extends Transaction {
         // In order to throw an exception
         configFuture.get();
         metadataFuture.get();
+    }
+
+    @Override
+    Object getResult() {
+        return newVersion;
     }
 
     private void writeMetadata() throws ExecutionException, InterruptedException, java.util.concurrent.TimeoutException {

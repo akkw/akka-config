@@ -58,6 +58,7 @@ public class CreateCommandHandler extends AbstractCommandHandler {
 
 
         response = new CreateConfigResponse();
+        ((CreateConfigResponse)response).setVersion((Integer) result.getResult());
         return result.isSuccess() ? CompletableFuture.completedFuture(fillResponse(response, ResponseCode.SUCCESS)) :
                 CompletableFuture.completedFuture(fillResponse(response, ResponseCode.CONFIG_CREATE_ERROR, result.getMessage()));
     }

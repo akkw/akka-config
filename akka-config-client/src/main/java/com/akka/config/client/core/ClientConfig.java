@@ -5,16 +5,16 @@ package com.akka.config.client.core;/*
 import com.akka.remoting.netty.NettyClientConfig;
 
 public class ClientConfig {
-    private String metadataRemoteAddress = "127.0.0.1:9707";
+    private String remoteAddress = "127.0.0.1:9707";
     private NettyClientConfig nettyClientConfig = new NettyClientConfig();
 
 
-    public String getMetadataRemoteAddress() {
-        return metadataRemoteAddress;
+    public String getRemoteAddress() {
+        return remoteAddress;
     }
 
-    public void setMetadataRemoteAddress(String metadataRemoteAddress) {
-        this.metadataRemoteAddress = metadataRemoteAddress;
+    public void setRemoteAddress(String remoteAddress) {
+        this.remoteAddress = remoteAddress;
     }
 
     public NettyClientConfig getNettyClientConfig() {

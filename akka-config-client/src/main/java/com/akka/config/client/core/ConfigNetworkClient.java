@@ -34,13 +34,13 @@ public class ConfigNetworkClient implements LifeCycle {
         request.setNamespace(namespace);
         request.setEnvironment(environment);
         request.setClientIp(clientIp);
-        final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.METADATA), 3000);
+        final Command respCommand = socketClient.invokeSync(clientConfig.getRemoteAddress(), buildRequestCommand(request, CommandCode.METADATA), 3000);
         return JSON.parseObject(respCommand.getBody(), MetadataResponse.class);
     }
 
     public ReadConfigResponse readConfig(String namespace, String environment, Integer version) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final ReadConfigRequest request = new ReadConfigRequest(namespace, environment,version);
-        final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.READ), 3000);
+        final Command respCommand = socketClient.invokeSync(clientConfig.getRemoteAddress(), buildRequestCommand(request, CommandCode.READ), 3000);
         return com.alibaba.fastjson2.JSON.parseObject(respCommand.getBody(), ReadConfigResponse.class);
     }
 

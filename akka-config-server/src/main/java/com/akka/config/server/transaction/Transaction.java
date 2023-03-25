@@ -189,6 +189,9 @@ public abstract class Transaction {
 
 
     abstract void transaction() throws Exception;
+
+    abstract Object getResult();
+
     private class TransactionThread extends Thread {
         public TransactionThread(String name) {
             super(name);

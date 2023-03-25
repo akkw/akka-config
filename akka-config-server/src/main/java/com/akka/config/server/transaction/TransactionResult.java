@@ -4,11 +4,12 @@ package com.akka.config.server.transaction;/*
 
 import java.util.Arrays;
 
-public class TransactionResult {
+public class TransactionResult<T> {
     private boolean success;
 
     private Exception exception;
 
+    private T result;
     private String message;
 
     public TransactionResult() {
@@ -32,5 +33,13 @@ public class TransactionResult {
 
     public void setSuccess(boolean success) {
         this.success = success;
+    }
+
+    public T getResult() {
+        return result;
+    }
+
+    public void setResult(T result) {
+        this.result = result;
     }
 }

@@ -89,7 +89,7 @@ public class ServerController implements LifeCycle {
                     try {
                         future = handler.commandHandler(command);
                     } catch (Exception e) {
-                        writeResponse(null, e, command, ctx);
+                        writeResponse(future.get(), e, command, ctx);
                         return null;
                     }
                     future.whenCompleteAsync((c, t) -> {

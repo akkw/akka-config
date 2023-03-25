@@ -40,6 +40,11 @@ public class NOPTransaction extends Transaction {
     }
 
     @Override
+    Object getResult() {
+        return null;
+    }
+
+    @Override
     void await() throws InterruptedException {
 
     }

@@ -9,13 +9,12 @@ import org.junit.Assert;
 import org.junit.Before;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /*
     create qiangzhiwei time 2023/2/14
- */public class AdminNetworkClientTest {
-    private final AdminNetworkClient client = new AdminNetworkClient(new ClientConfig());
+ */public class AdminTest {
+    private final Admin client = new Admin(new ClientConfig());
 
     @Before
     public void before() {

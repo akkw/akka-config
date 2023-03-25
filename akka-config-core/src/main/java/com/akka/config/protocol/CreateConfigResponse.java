@@ -3,7 +3,7 @@ package com.akka.config.protocol;/*
  */
 
 public class CreateConfigResponse extends Response {
-    private int version;
+    private Integer version;
 
     public CreateConfigResponse() {
     }
@@ -16,11 +16,11 @@ public class CreateConfigResponse extends Response {
         super(code, error);
     }
 
-    public int getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 }
