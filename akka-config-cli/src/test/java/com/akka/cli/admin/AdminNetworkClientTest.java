@@ -40,7 +40,7 @@ import java.util.List;
 
     @org.junit.Test
     public void readConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final ReadConfigResponse readResponse = client.readConfig("mysqlUtils-test", "dev", 6);
+        final ReadConfigResponse readResponse = client.readConfig("akka-name", "dev", 6);
         System.out.println(readResponse);
     }
 
@@ -56,9 +56,16 @@ import java.util.List;
         List<Metadata.ClientVersion> clientVersionList = new ArrayList<>();
         final Metadata.ClientVersion clientVersion = new Metadata.ClientVersion();
         clientVersion.setClient("127.0.0.1");
-        clientVersion.setVersion(3);
+        clientVersion.setVersion(6);
         clientVersionList.add(clientVersion);
-        client.activateConfig("akka-name", "dev", 3, "127.0.0.1", clientVersionList);
+
+
+        final Metadata.ClientVersion clientVersion1 = new Metadata.ClientVersion();
+        clientVersion1.setClient("127.0.0.2");
+        clientVersion1.setVersion(6);
+        clientVersionList.add(clientVersion1);
+
+        client.activateConfig("akka-name", "dev", 6, "127.0.0.1", clientVersionList);
     }
 
     @org.junit.Test
@@ -67,23 +74,17 @@ import java.util.List;
         final Metadata.ClientVersion clientVersion = new Metadata.ClientVersion();
         clientVersion.setClient("127.0.0.1");
         clientVersion.setVersion(3);
-
         clientVersionList.add(clientVersion);
-        client.verifyConfig("akka-name", "dev", 2, "", clientVersionList);
-    }
-
-    @org.junit.Test
-    public void activateMultiConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.activateMultiConfig("akka-name", "dev", 1, new HashMap<>());
-    }
-
-    @org.junit.Test
-    public void verifyMultiConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.verifyMultiConfig("akka-name", "dev", 1, new HashMap<>());
+        final Metadata.ClientVersion clientVersion1 = new Metadata.ClientVersion();
+        clientVersion1.setClient("127.0.0.2");
+        clientVersion1.setVersion(5);
+        clientVersionList.add(clientVersion1);
+        client.verifyConfig("akka-name", "dev", 3, "", clientVersionList);
     }
 
     @org.junit.Test
     public void metadata() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        client.metadata("akka-name", "dev", "127.0.0.1");
+        final MetadataResponse metadata = client.metadata("akka-name", "dev", "127.0.0.2");
+        System.out.println(metadata);
     }
 }

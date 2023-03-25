@@ -2,6 +2,8 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/11
  */
 
+import java.util.Arrays;
+
 public class MetadataResponse extends Response {
     private String namespace;
     private String environment;
@@ -42,4 +44,15 @@ public class MetadataResponse extends Response {
     }
 
 
+    @Override
+    public String toString() {
+        return "MetadataResponse{" +
+                "namespace='" + namespace + '\'' +
+                ", environment='" + environment + '\'' +
+                ", verifyVersion=" + verifyVersion +
+                ", activateVersion=" + activateVersion +
+                ", code=" + code +
+                ", message=" + Arrays.toString(message) +
+                '}';
+    }
 }

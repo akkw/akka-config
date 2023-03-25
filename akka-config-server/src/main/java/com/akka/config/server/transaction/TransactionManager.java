@@ -55,6 +55,7 @@ public class TransactionManager {
         switch (transactionKind) {
             case CREATE_CONFIG:
             case ACTIVATE_VERSION:
+            case VERIFY_VERSION:
                 final String lockPath = PathUtils.createLockPath(etcdConfig.getPathConfig(), namespace, environment, transactionKind.kind());
                 String lockKey;
                 try {

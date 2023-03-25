@@ -348,9 +348,11 @@ public class EtcdClient implements LifeCycle {
                 long lastPrintTime = System.currentTimeMillis();
                 @Override
                 public void onNext(LeaseKeepAliveResponse value) {
-                    if (System.currentTimeMillis() - lastPrintTime > intervalTime) {
+                    final long currentTimeMillis = System.currentTimeMillis();
+                    if (currentTimeMillis - lastPrintTime > intervalTime) {
                         logger.info("leaseId keepAlive, leaseId: {}, ttl: {}", value.getID(), value.getTTL());
                     }
+                    lastPrintTime = currentTimeMillis;
                 }
 
                 @Override

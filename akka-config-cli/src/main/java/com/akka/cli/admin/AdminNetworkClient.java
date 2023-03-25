@@ -6,8 +6,6 @@ import com.akka.config.client.core.ClientConfig;
 import com.akka.config.client.core.ConfigNetworkClient;
 import com.akka.config.protocol.ActivateConfigRequest;
 import com.akka.config.protocol.ActivateConfigResponse;
-import com.akka.config.protocol.ActivateMultiConfigRequest;
-import com.akka.config.protocol.ActivateMultiConfigResponse;
 import com.akka.config.protocol.CommandCode;
 import com.akka.config.protocol.CreateConfigRequest;
 import com.akka.config.protocol.CreateConfigResponse;
@@ -20,7 +18,6 @@ import com.akka.config.protocol.MultiReadConfigRequest;
 import com.akka.config.protocol.MutliReadConfigResponse;
 import com.akka.config.protocol.VerifyConfigRequest;
 import com.akka.config.protocol.VerifyConfigResponse;
-import com.akka.config.protocol.VerifyMultiConfigRequest;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
@@ -74,15 +71,4 @@ public class AdminNetworkClient extends ConfigNetworkClient {
         return JSON.parseObject(respCommand.getBody(), VerifyConfigResponse.class);
     }
 
-    public ActivateMultiConfigResponse activateMultiConfig(String namespace, String environment, Integer version, Map<String, Metadata.ClientVersion> activateVersionList) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final ActivateMultiConfigRequest request = new ActivateMultiConfigRequest(namespace, environment,version, activateVersionList);
-        final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request,CommandCode.ACTIVATE_MULTI), 3000);
-        return JSON.parseObject(respCommand.getBody(), ActivateMultiConfigResponse.class);
-    }
-
-    public VerifyMultiConfigRequest verifyMultiConfig(String namespace, String environment, Integer version, Map<String, Metadata.ClientVersion> verifyVersionMap) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
-        final VerifyMultiConfigRequest request = new VerifyMultiConfigRequest(namespace, environment,version, verifyVersionMap);
-        final Command respCommand = socketClient.invokeSync(clientConfig.getMetadataRemoteAddress(), buildRequestCommand(request, CommandCode.VERIFY_MULTI_CONFIG), 3000);
-        return JSON.parseObject(respCommand.getBody(), VerifyMultiConfigRequest.class);
-    }
 }

@@ -176,13 +176,14 @@ public abstract class Transaction {
     }
 
     private void doClearUpClientVersion(Integer reqVersion, Set<Metadata.ClientVersion> metadataVerifyVersionsSet, List<Metadata.ClientVersion> requestVersionList) {
-        if (reqVersion != null) {
-            requestVersionList.removeIf(reqClientVersion -> reqVersion.equals(reqClientVersion.getVersion()));
-            metadataVerifyVersionsSet.removeIf(metadataClientVersion -> reqVersion.equals(metadataClientVersion.getVersion()));
+        if (reqVersion == null) {
+            return;
         }
+        metadataVerifyVersionsSet.removeIf(metadataClientVersion -> reqVersion.equals(metadataClientVersion.getVersion()));
         for (Metadata.ClientVersion clientVersion: requestVersionList) {
             metadataVerifyVersionsSet.remove(clientVersion);
         }
+        requestVersionList.removeIf(reqClientVersion -> reqVersion.equals(reqClientVersion.getVersion()));
         metadataVerifyVersionsSet.addAll(requestVersionList);
     }
 
