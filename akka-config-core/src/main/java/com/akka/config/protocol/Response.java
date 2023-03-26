@@ -2,6 +2,8 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/11
  */
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 public class Response {
     protected int code = ResponseCode.SUCCESS.code();
     protected byte[] message;
@@ -14,7 +16,7 @@ public class Response {
     }
 
 
-
+    @JSONField(serialize = false)
     public byte[] getMessage() {
         return message;
     }

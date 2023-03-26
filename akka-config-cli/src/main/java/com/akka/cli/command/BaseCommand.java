@@ -26,6 +26,13 @@ public abstract class BaseCommand {
     protected String environment;
 
 
-
+    public void executor() {
+       try {
+           admin.start();
+           doCommand();
+       } finally {
+           admin.stop();
+       }
+    }
     public abstract void doCommand();
 }

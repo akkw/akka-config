@@ -8,10 +8,13 @@ import java.sql.SQLException;
 import java.util.concurrent.ExecutionException;
 
 public class NOPTransaction extends Transaction {
-    private final Exception exception;
 
     public NOPTransaction(long transactionId, EtcdClient etcdClient, Exception exception) {
         super(null, transactionId, null, null, null);
+        this.exception = exception;
+    }
+
+    public void setException(Exception exception) {
         this.exception = exception;
     }
 

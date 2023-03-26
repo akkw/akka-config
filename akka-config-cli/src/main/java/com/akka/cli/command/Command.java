@@ -30,7 +30,7 @@ public class Command {
         } else {
             BaseCommand command = commandMap.get(jc.getParsedCommand());
             if (null != command) {
-                command.doCommand();
+                command.executor();
             } else {
                 jc.usage();
             }

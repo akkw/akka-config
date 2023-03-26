@@ -11,6 +11,7 @@ import com.akka.config.store.mysql.model.MysqlConfigModel;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +38,7 @@ public class MultiReadCommandHandler extends AbstractCommandHandler {
         final MutliReadConfigResponse readAllConfigResponse = new MutliReadConfigResponse();
         readAllConfigResponse.setNamespace(namespace);
         readAllConfigResponse.setEnvironment(environment);
-        readAllConfigResponse.setBody(JSON.toJSONBytes(mysqlConfigModelList));
+        readAllConfigResponse.setBody(JSON.toJSONString(mysqlConfigModelList));
         return CompletableFuture.completedFuture(readAllConfigResponse);
     }
 }

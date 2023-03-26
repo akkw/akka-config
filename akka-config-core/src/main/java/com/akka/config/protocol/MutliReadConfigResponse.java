@@ -2,8 +2,10 @@ package com.akka.config.protocol;/*
     create qiangzhiwei time 2023/2/13
  */
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 public class MutliReadConfigResponse extends Response {
-    private byte[] body;
+    private String body;
 
     private String namespace;
     private String environment;
@@ -23,12 +25,11 @@ public class MutliReadConfigResponse extends Response {
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
-
-    public byte[] getBody() {
+    public String getBody() {
         return body;
     }
 
-    public void setBody(byte[] body) {
+    public void setBody(String body) {
         this.body = body;
     }
 }

@@ -4,7 +4,7 @@ package com.akka.config.protocol;/*
 
 
 public class ReadConfigResponse extends Response {
-    private byte[] body;
+    private String body;
     private String namespace;
     private String environment;
     private Integer version;
@@ -34,12 +34,11 @@ public class ReadConfigResponse extends Response {
     public void setVersion(Integer version) {
         this.version = version;
     }
-
-    public byte[] getBody() {
+    public String getBody() {
         return body;
     }
 
-    public void setBody(byte[] body) {
+    public void setBody(String body) {
         this.body = body;
     }
 

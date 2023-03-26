@@ -5,19 +5,19 @@ package com.akka.config.api.core;/*
 import java.util.Arrays;
 
 public class Config {
-    private final byte[] body;
+    private final String body;
     private final String namespace;
     private final String environment;
     private final int version;
 
-    public Config(byte[] body, String namespace, String environment, int version) {
+    public Config(String body, String namespace, String environment, int version) {
         this.body = body;
         this.namespace = namespace;
         this.environment = environment;
         this.version = version;
     }
 
-    public byte[] getBody() {
+    public String getBody() {
         return body;
     }
 
@@ -36,7 +36,7 @@ public class Config {
     @Override
     public String toString() {
         return "Config{" +
-                "body=" + Arrays.toString(body) +
+                "body=" + body +
                 ", namespace='" + namespace + '\'' +
                 ", environment='" + environment + '\'' +
                 ", version=" + version +

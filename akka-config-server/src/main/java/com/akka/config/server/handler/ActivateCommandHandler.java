@@ -50,7 +50,7 @@ public class ActivateCommandHandler extends AbstractCommandHandler {
         transaction.executor();
 
         TransactionResult result = transactionManager.end(transaction.getTransactionId());
-        response = new VerifyConfigResponse();
+        response = new ActivateConfigResponse();
         return result.isSuccess() ? CompletableFuture.completedFuture(fillResponse(response, ResponseCode.SUCCESS)) :
                 CompletableFuture.completedFuture(fillResponse(response, ResponseCode.ACTIVE_VERSION_ERROR, result.getMessage()));
     }

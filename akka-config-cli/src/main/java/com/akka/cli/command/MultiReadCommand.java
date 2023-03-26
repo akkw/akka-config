@@ -4,14 +4,16 @@ package com.akka.cli.command;/*
 
 import com.akka.config.protocol.MutliReadConfigResponse;
 import com.akka.config.protocol.ReadConfigResponse;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.beust.jcommander.Parameter;
 
 import java.util.Arrays;
+import java.util.Iterator;
 
 public class MultiReadCommand extends BaseCommand {
 
-    @Parameter(names = {"--version", "-v"}, required = true)
-    private int version;
     @Parameter(names = {"--max", "-h"}, required = true)
     private int max;
     @Parameter(names = {"--min", "-l"}, required = true)
@@ -20,9 +22,8 @@ public class MultiReadCommand extends BaseCommand {
     public void doCommand() {
         try {
             final MutliReadConfigResponse response = admin.readAllConfig(namespace, environment, min, max);
-            if (response.getCode() != 200) {
-                System.out.println(new String(response.getMessage()));
-            }
+            System.out.println(JSON.toJSONString(response));
+
         } catch (Exception e) {
             System.out.println(Arrays.toString(e.getStackTrace()));
         }

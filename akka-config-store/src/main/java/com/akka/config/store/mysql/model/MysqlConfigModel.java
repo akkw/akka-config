@@ -33,8 +33,8 @@ public class MysqlConfigModel {
         this.version = version;
     }
 
-    public byte[] getContent() {
-        return content;
+    public String getContent() {
+        return new String(content);
     }
 
     public void setContent(byte[] content) {

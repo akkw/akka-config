@@ -65,6 +65,7 @@ public class TransactionManager {
                             namespace, environment, transactionKind, e);
                     final NOPTransaction nopTransaction = new NOPTransaction(transactionId, null, e);
                     transactionSnapshotMap.put(transactionId, nopTransaction);
+                    nopTransaction.setException(e);
                     return nopTransaction;
                 }
 

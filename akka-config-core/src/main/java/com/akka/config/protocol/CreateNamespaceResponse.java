@@ -3,6 +3,8 @@ package com.akka.config.protocol;/*
  */
 
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 public class CreateNamespaceResponse extends Response {
     public CreateNamespaceResponse() {
     }
@@ -16,6 +18,10 @@ public class CreateNamespaceResponse extends Response {
         super(code, message);
     }
 
+    @JSONField
+    public String message() {
+        return new String(message);
+    }
     @Override
     public String toString() {
         return "CreateNamespaceResponse{" +
