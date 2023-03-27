@@ -47,7 +47,7 @@ import java.util.List;
     @org.junit.Test
     public void readAllConfig() throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final MutliReadConfigResponse mutliReadConfigResponse = client.readAllConfig("akka-name", "dev", 1, 5);
-        System.out.println(new String(mutliReadConfigResponse.getBodyBytes()));
+        System.out.println(mutliReadConfigResponse.getBody());
     }
 
     @org.junit.Test
