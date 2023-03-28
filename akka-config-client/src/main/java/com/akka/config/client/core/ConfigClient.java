@@ -45,9 +45,12 @@ public class ConfigClient implements Client {
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                remoteUpdateVersion();
+               try {
+                   remoteUpdateVersion();
 
-                localUpdateVersion();
+                   localUpdateVersion();
+               } catch (Exception ignored){
+               }
             }
         }, 0, 3000);
         this.isRun = true;
@@ -88,12 +91,14 @@ public class ConfigClient implements Client {
                         logger.error("The client failed to activate the configuration. namespace: {}, environment: {}", namespace, environment, e);
                     }
                 }
+                configMetadataSnapshot.updateVersion();
+
             }
 
         }
     }
 
-    private void remoteUpdateVersion() {
+    private void remoteUpdateVersion() throws Exception{
         final Iterator<Map.Entry<String, Map<String, ConfigWatch>>> namespaceIterator = watchMap.entrySet().iterator();
         while (namespaceIterator.hasNext()) {
             final Map.Entry<String, Map<String, ConfigWatch>> namespaceEntry = namespaceIterator.next();
@@ -107,6 +112,7 @@ public class ConfigClient implements Client {
                     configMetadataSnapshot.newMetadata = metadata;
                 } catch (Exception e) {
                     logger.error("Failed to obtain metadata. namespace: {} environment: {}", namespace, environment, e);
+                    throw e;
                 }
             }
         }
@@ -119,28 +125,20 @@ public class ConfigClient implements Client {
 
 
         private boolean isVerifyVersionUpdate() {
-            if (newMetadata != null && prevMetadata == null) {
-                return true;
+            if (newMetadata == null || prevMetadata == null) {
+                return false;
             }
+            return !newMetadata.getVerifyVersion().equals(prevMetadata.getVerifyVersion());
 
-            if (newMetadata != null) {
-                return newMetadata.getVerifyVersion().equals(prevMetadata.getVerifyVersion());
-            }
-
-            return false;
         }
 
 
         private boolean isActivateVersionUpdate() {
-            if (newMetadata != null && prevMetadata == null) {
-                return true;
+            if (newMetadata == null || prevMetadata == null) {
+                return false;
             }
+            return !newMetadata.getActivateVersion().equals(prevMetadata.getActivateVersion());
 
-            if (newMetadata != null) {
-                return newMetadata.getActivateVersion().equals(prevMetadata.getActivateVersion());
-            }
-
-            return false;
         }
 
         private void updateVersion() {
