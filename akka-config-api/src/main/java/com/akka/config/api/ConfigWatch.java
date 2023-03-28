@@ -5,7 +5,7 @@ package com.akka.config.api;/*
 import com.akka.config.api.core.Config;
 
 public interface ConfigWatch {
-    boolean verify(Config config);
+    void verify(Config config);
 
     void activate(Config config);
 }

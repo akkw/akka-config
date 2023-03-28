@@ -12,9 +12,4 @@ public class ActivateConfigResponse extends Response {
 
     public ActivateConfigResponse() {
     }
-
-    @JSONField
-    public String message() {
-        return new String(message);
-    }
 }

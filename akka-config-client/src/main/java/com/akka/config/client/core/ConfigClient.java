@@ -4,7 +4,12 @@ package com.akka.config.client.core;/*
 
 import com.akka.config.api.Client;
 import com.akka.config.api.ConfigWatch;
+import com.akka.config.api.core.Config;
 import com.akka.config.protocol.MetadataResponse;
+import com.akka.config.protocol.ReadConfigResponse;
+import com.akka.remoting.exception.RemotingConnectException;
+import com.akka.remoting.exception.RemotingSendRequestException;
+import com.akka.remoting.exception.RemotingTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +42,7 @@ public class ConfigClient implements Client {
     @Override
     public void start() {
         this.networkClient.start();
-        this.timer.scheduleAtFixedRate(new TimerTask() {
+        this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 remoteUpdateVersion();
@@ -49,7 +54,43 @@ public class ConfigClient implements Client {
     }
 
     private void localUpdateVersion() {
+        final Iterator<Map.Entry<String, Map<String, ConfigMetadataSnapshot>>> namespaceIterator = configMetadataSnapshotMap.entrySet().iterator();
+        while (namespaceIterator.hasNext()) {
+            final Iterator<ConfigMetadataSnapshot> configMetadataSnapshotIterator = namespaceIterator.next()
+                    .getValue()
+                    .values()
+                    .iterator();
 
+            while (configMetadataSnapshotIterator.hasNext()) {
+                final ConfigMetadataSnapshot configMetadataSnapshot = configMetadataSnapshotIterator.next();
+                final MetadataResponse newMetadata = configMetadataSnapshot.newMetadata;
+                final String namespace = newMetadata.getNamespace();
+                final String environment = newMetadata.getEnvironment();
+
+                if (configMetadataSnapshot.isVerifyVersionUpdate()) {
+                    try {
+                        final ReadConfigResponse response = networkClient.readConfig(namespace, environment, newMetadata.getVerifyVersion());
+                        final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
+                        final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
+                        configWatch.verify(config);
+                    } catch (Exception e) {
+                        logger.error("The client failed to verify the configuration. namespace: {}, environment: {}", namespace, environment, e);
+                    }
+                }
+
+                if (configMetadataSnapshot.isActivateVersionUpdate()) {
+                    try {
+                        final ReadConfigResponse response = networkClient.readConfig(namespace, environment, newMetadata.getActivateVersion());
+                        final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
+                        final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
+                        configWatch.activate(config);
+                    } catch (Exception e) {
+                        logger.error("The client failed to activate the configuration. namespace: {}, environment: {}", namespace, environment, e);
+                    }
+                }
+            }
+
+        }
     }
 
     private void remoteUpdateVersion() {
@@ -90,7 +131,6 @@ public class ConfigClient implements Client {
         }
 
 
-
         private boolean isActivateVersionUpdate() {
             if (newMetadata != null && prevMetadata == null) {
                 return true;
@@ -125,27 +165,23 @@ public class ConfigClient implements Client {
 
     private void putConfigWatchIfAbsent(String namespace, String environment, ConfigWatch configWatch) {
         Map<String, ConfigWatch> steadyWatchMap = watchMap.get(namespace);
+        Map<String, ConfigMetadataSnapshot> steadyConfigMetadataSnapshotMap = configMetadataSnapshotMap.get(namespace);
         if (steadyWatchMap == null) {
             Map<String, ConfigWatch> transitoryWatchMap = new ConcurrentHashMap<>();
+            Map<String, ConfigMetadataSnapshot> transitoryMetadataSnapshotMap = new ConcurrentHashMap<>();
+
+            steadyConfigMetadataSnapshotMap = configMetadataSnapshotMap.putIfAbsent(namespace, transitoryMetadataSnapshotMap);
             steadyWatchMap = watchMap.putIfAbsent(namespace, transitoryWatchMap);
+            if (steadyConfigMetadataSnapshotMap == null) {
+                steadyConfigMetadataSnapshotMap = transitoryMetadataSnapshotMap;
+            }
             if (steadyWatchMap == null) {
                 steadyWatchMap = transitoryWatchMap;
             }
         }
-        steadyWatchMap.putIfAbsent(environment, configWatch);
-
-        Map<String, ConfigMetadataSnapshot> steadyConfigMetadataSnapshotMap = configMetadataSnapshotMap.get(namespace);
-        if (steadyConfigMetadataSnapshotMap == null) {
-            Map<String, ConfigMetadataSnapshot> transitoryMetadataSnapshotMap = new ConcurrentHashMap<>();
-            steadyConfigMetadataSnapshotMap = configMetadataSnapshotMap.putIfAbsent(namespace, transitoryMetadataSnapshotMap);
-            if (steadyConfigMetadataSnapshotMap == null) {
-                steadyConfigMetadataSnapshotMap = transitoryMetadataSnapshotMap;
-            }
-        }
-
-        if (steadyConfigMetadataSnapshotMap.containsKey(environment)) {
+        if (!steadyConfigMetadataSnapshotMap.containsKey(environment)) {
             steadyConfigMetadataSnapshotMap.put(environment, new ConfigMetadataSnapshot());
         }
-
+        steadyWatchMap.putIfAbsent(environment, configWatch);
     }
 }

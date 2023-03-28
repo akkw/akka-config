@@ -18,8 +18,8 @@ public class ConfigClientMain {
         client.start();
         client.watch("akka-name", "dev", new ConfigWatch() {
             @Override
-            public boolean verify(Config config) {
-                return false;
+            public void verify(Config config) {
+                logger.info(JSON.toJSONString(config.toString()));
             }
 
             @Override
