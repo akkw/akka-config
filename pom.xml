@@ -17,7 +17,7 @@
         <module>akka-config-cli</module>
         <module>akka-config-client</module>
         <module>akka-config-ha</module>
-        <module>akka-config-spring</module>
+        <module>akka-config-client-springboot</module>
     </modules>
 
     <properties>

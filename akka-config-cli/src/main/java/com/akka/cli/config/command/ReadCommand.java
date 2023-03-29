@@ -1,20 +1,21 @@
-package com.akka.cli.command;/* 
+package com.akka.cli.config.command;/*
     create qiangzhiwei time 2023/3/26
  */
 
-import com.akka.config.protocol.CreateNamespaceResponse;
-import com.akka.config.protocol.MetadataResponse;
+import com.akka.config.protocol.ReadConfigResponse;
 import com.alibaba.fastjson.JSON;
 import com.beust.jcommander.Parameter;
 
 import java.util.Arrays;
 
-public class CreateNamespaceCommand extends BaseCommand {
+public class ReadCommand extends BaseCommand {
 
+    @Parameter(names = {"--version", "-v"}, required = true)
+    private int version;
     @Override
     public void doCommand() {
         try {
-            final CreateNamespaceResponse response = admin.createNamespace(namespace, environment);
+            final ReadConfigResponse response = admin.readConfig(namespace, environment, version);
             System.out.println(JSON.toJSONString(response));
         } catch (Exception e) {
             System.out.println(Arrays.toString(e.getStackTrace()));
