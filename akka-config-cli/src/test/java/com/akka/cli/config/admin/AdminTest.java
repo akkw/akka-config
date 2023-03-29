@@ -1,4 +1,4 @@
-package com.akka.cli.admin;
+package com.akka.cli.config.admin;
 
 import com.akka.config.client.core.ClientConfig;
 import com.akka.config.protocol.*;

@@ -1,8 +1,7 @@
-package com.akka.cli.command;/* 
+package com.akka.cli.config.command;/*
     create qiangzhiwei time 2023/3/26
  */
 
-import com.akka.config.protocol.ActivateConfigResponse;
 import com.akka.config.protocol.Metadata;
 import com.akka.config.protocol.VerifyConfigResponse;
 import com.alibaba.fastjson.JSON;

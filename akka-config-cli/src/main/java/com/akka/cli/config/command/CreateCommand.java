@@ -1,11 +1,8 @@
-package com.akka.cli.command;/* 
+package com.akka.cli.config.command;/*
     create qiangzhiwei time 2023/3/26
  */
 
 import com.akka.config.protocol.CreateConfigResponse;
-import com.akka.remoting.exception.RemotingConnectException;
-import com.akka.remoting.exception.RemotingSendRequestException;
-import com.akka.remoting.exception.RemotingTimeoutException;
 import com.beust.jcommander.Parameter;
 
 import java.util.Arrays;

@@ -1,4 +1,4 @@
-package com.akka.cli.admin;/* 
+package com.akka.cli.config.admin;/*
     create qiangzhiwei time 2023/2/13
  */
 

@@ -1,16 +1,12 @@
-package com.akka.cli.command;/* 
+package com.akka.cli.config.command;/*
     create qiangzhiwei time 2023/3/26
  */
 
 import com.akka.config.protocol.MutliReadConfigResponse;
-import com.akka.config.protocol.ReadConfigResponse;
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.beust.jcommander.Parameter;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 public class MultiReadCommand extends BaseCommand {
 
