@@ -52,7 +52,7 @@ public class ConfigClient implements Client {
                } catch (Exception ignored){
                }
             }
-        }, 0, 3000);
+        }, 0, clientConfig.getConfigPullIntervalMs());
         this.isRun = true;
     }
 

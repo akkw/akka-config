@@ -6,6 +6,18 @@ import com.akka.remoting.netty.NettyClientConfig;
 
 public class ClientConfig {
     private String remoteAddress = "127.0.0.1:9707";
+
+    private long configPullIntervalMs = 3000;
+
+
+    public long getConfigPullIntervalMs() {
+        return configPullIntervalMs;
+    }
+
+    public void setConfigPullIntervalMs(long configPullIntervalMs) {
+        this.configPullIntervalMs = configPullIntervalMs;
+    }
+
     private NettyClientConfig nettyClientConfig = new NettyClientConfig();
 
 
