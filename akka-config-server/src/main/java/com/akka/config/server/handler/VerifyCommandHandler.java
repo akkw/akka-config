@@ -3,7 +3,10 @@ package com.akka.config.server.handler;/*
  */
 
 import com.akka.config.ha.etcd.EtcdClient;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.Response;
+import com.akka.config.protocol.ResponseCode;
+import com.akka.config.protocol.VerifyConfigRequest;
+import com.akka.config.protocol.VerifyConfigResponse;
 import com.akka.config.server.core.MetadataManager;
 import com.akka.config.server.transaction.Transaction;
 import com.akka.config.server.transaction.TransactionKind;
@@ -14,8 +17,6 @@ import com.akka.config.store.Store;
 import com.akka.remoting.protocol.Command;
 import com.alibaba.fastjson2.JSON;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;

@@ -4,9 +4,6 @@ package com.akka.config.server.transaction;/*
 
 import com.akka.config.ha.etcd.EtcdClient;
 
-import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
-
 public class NOPTransaction extends Transaction {
 
     public NOPTransaction(long transactionId, EtcdClient etcdClient, Exception exception) {
@@ -24,7 +21,7 @@ public class NOPTransaction extends Transaction {
     }
 
     @Override
-    void undoLog() throws ExecutionException, InterruptedException {
+    void undoLog()  {
 
     }
 
@@ -32,10 +29,7 @@ public class NOPTransaction extends Transaction {
     public void executor() {
     }
 
-    @Override
-    public Exception exception() {
-        return exception;
-    }
+
 
     @Override
     void transaction() throws Exception {
@@ -48,7 +42,7 @@ public class NOPTransaction extends Transaction {
     }
 
     @Override
-    void await() throws InterruptedException {
+    void await() {
 
     }
 }

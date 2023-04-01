@@ -5,7 +5,7 @@ package com.akka.config.server.transaction;/*
 import com.akka.config.ha.common.PathUtils;
 import com.akka.config.ha.etcd.EtcdClient;
 import com.akka.config.ha.etcd.EtcdConfig;
-import com.akka.config.protocol.*;
+import com.akka.config.protocol.Metadata;
 import com.akka.config.server.exception.IllegalVersionException;
 import com.akka.tools.retry.Retry;
 import com.alibaba.fastjson2.JSON;
@@ -13,7 +13,6 @@ import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -24,9 +23,9 @@ public abstract class Transaction {
 
     private final static Logger logger = LoggerFactory.getLogger(Transaction.class);
 
-    private long transactionId;
+    private final long transactionId;
 
-    private String lockKey;
+    private final String lockKey;
 
     protected Exception exception;
 
@@ -75,7 +74,7 @@ public abstract class Transaction {
 
     abstract void undoLog() throws ExecutionException, InterruptedException, TimeoutException;
 
-    protected void prepare() throws ExecutionException, InterruptedException, SQLException, TimeoutException {
+    protected void prepare() throws ExecutionException, InterruptedException {
         checkNoPaas();
         final String undoLogPath = PathUtils.createUndoLogPath(etcdConfig.getPathConfig(), namespace, environment, TransactionKey.METADATA.name());
         final Pair<String, String> etcdMetadataPair = etcdClient.get(undoLogPath);
@@ -111,11 +110,6 @@ public abstract class Transaction {
 
     void await() throws InterruptedException {
         countDownLatch.await();
-    }
-
-
-    public Exception exception() {
-        return exception;
     }
 
     private void deleteUndoLog() throws ExecutionException, InterruptedException, TimeoutException {

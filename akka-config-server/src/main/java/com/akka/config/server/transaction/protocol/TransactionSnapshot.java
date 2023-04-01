@@ -1,11 +1,5 @@
 package com.akka.config.server.transaction.protocol;
 
-import com.akka.config.protocol.ActivateConfigRequest;
-import com.akka.config.protocol.Metadata;
-import com.akka.config.protocol.Response;
-
-import java.util.List;
-
 public class TransactionSnapshot {
     private final String namespace;
 

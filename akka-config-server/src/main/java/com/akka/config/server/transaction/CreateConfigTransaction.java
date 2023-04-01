@@ -73,10 +73,15 @@ public class CreateConfigTransaction extends Transaction {
             try {
                 logger.debug("rollback etcdMetadata: {}", etcdMetadata);
                 etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), etcdMetadata);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+
+            }
             try {
+
                 store.delete(namespace, environment, transactionUndoLog.getNewVersion());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+
+            }
         }
     }
 

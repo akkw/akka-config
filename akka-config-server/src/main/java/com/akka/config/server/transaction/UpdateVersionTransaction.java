@@ -8,7 +8,6 @@ import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -40,7 +39,9 @@ public class UpdateVersionTransaction extends Transaction {
         if (undoLogWriteSuccess || prev) {
             try {
                 etcdClient.put(PathUtils.createEnvironmentPath(etcdConfig.getPathConfig(), namespace, environment), JSON.toJSONString(transactionUndoLog.getMetadata()));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+
+            }
         }
     }
 
@@ -64,7 +65,7 @@ public class UpdateVersionTransaction extends Transaction {
         if (transactionKind == TransactionKind.ACTIVATE_VERSION) {
             clearUpClientVersion(verison, etcdMetadata.getActivateVersions(), clientVersionList);
             etcdMetadata.setGlobalVersion(verison);
-        } else if (transactionKind == TransactionKind.VERIFY_VERSION){
+        } else if (transactionKind == TransactionKind.VERIFY_VERSION) {
             clearUpClientVersion(verison, etcdMetadata.getVerifyVersions(), clientVersionList);
             etcdMetadata.setVerifyVersion(verison);
         }

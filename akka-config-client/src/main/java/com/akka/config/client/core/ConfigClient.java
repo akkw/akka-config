@@ -8,13 +8,13 @@ import com.akka.config.api.core.Config;
 import com.akka.config.protocol.MetadataResponse;
 import com.akka.config.protocol.ReadConfigResponse;
 import com.akka.config.protocol.ResponseCode;
-import com.akka.remoting.exception.RemotingConnectException;
-import com.akka.remoting.exception.RemotingSendRequestException;
-import com.akka.remoting.exception.RemotingTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigClient implements Client {
@@ -46,12 +46,13 @@ public class ConfigClient implements Client {
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-               try {
-                   remoteUpdateVersion();
+                try {
 
-                   localUpdateVersion();
-               } catch (Exception ignored){
-               }
+                    remoteUpdateVersion();
+
+                    localUpdateVersion();
+                } catch (Exception ignored) {
+                }
             }
         }, 0, clientConfig.getConfigPullIntervalMs());
         this.isRun = true;
@@ -109,7 +110,7 @@ public class ConfigClient implements Client {
         }
     }
 
-    private void remoteUpdateVersion() throws Exception{
+    private void remoteUpdateVersion() throws Exception {
         final Iterator<Map.Entry<String, Map<String, ConfigWatch>>> namespaceIterator = watchMap.entrySet().iterator();
         while (namespaceIterator.hasNext()) {
             final Map.Entry<String, Map<String, ConfigWatch>> namespaceEntry = namespaceIterator.next();
