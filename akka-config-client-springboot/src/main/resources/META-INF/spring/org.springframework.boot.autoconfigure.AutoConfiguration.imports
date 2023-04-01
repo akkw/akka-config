@@ -1,1 +1,1 @@
-com.akka.cli.config.springboot.core.AkkaConfigAutoConfiguration
+com.akka.cli.config.springboot.autoconfigure.AkkaConfigAutoConfiguration

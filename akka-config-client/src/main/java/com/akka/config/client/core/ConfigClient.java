@@ -125,18 +125,29 @@ public class ConfigClient implements Client {
 
 
         private boolean isVerifyVersionUpdate() {
-            if (newMetadata == null || prevMetadata == null) {
+
+            if (prevMetadata == null) {
+                return true;
+            }
+
+            if (newMetadata == null) {
                 return false;
             }
+
             return !newMetadata.getVerifyVersion().equals(prevMetadata.getVerifyVersion());
 
         }
 
 
         private boolean isActivateVersionUpdate() {
-            if (newMetadata == null || prevMetadata == null) {
+            if (prevMetadata == null) {
+                return true;
+            }
+
+            if (newMetadata == null) {
                 return false;
             }
+
             return !newMetadata.getActivateVersion().equals(prevMetadata.getActivateVersion());
 
         }

@@ -1,4 +1,4 @@
-package com.akka.cli.config.springboot.core;
+package com.akka.cli.config.springboot.autoconfigure;
 
 import com.akka.cli.config.springboot.autoconfigure.AkkaConfigListenerConfiguration;
 import com.akka.cli.config.springboot.autoconfigure.AkkaConfigListenerRegister;

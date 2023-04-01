@@ -1,7 +1,6 @@
 package com.akka.cli.config.springboot.autoconfigure;
 
 import com.akka.cli.config.springboot.annotation.AkkaConfigListenerBeanPostProcessor;
-import com.akka.cli.config.springboot.core.AkkaConfigAutoConfiguration;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -16,7 +15,7 @@ public class AkkaConfigListenerConfiguration implements ImportBeanDefinitionRegi
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         if (!registry.containsBeanDefinition(AkkaConfigListenerBeanPostProcessor.class.getName())) {
             registry.registerBeanDefinition(AkkaConfigListenerBeanPostProcessor.class.getName(),
-                    new RootBeanDefinition(AkkaConfigAutoConfiguration.class));
+                    new RootBeanDefinition(AkkaConfigListenerBeanPostProcessor.class));
         }
     }
 }
