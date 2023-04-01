@@ -21,12 +21,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AkkaConfigAutoConfigurationTest {
     private ApplicationContextRunner runner = new ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(AkkaConfigAutoConfiguration.class));
+
     @Test
     public void testAkkaConfigAnnotation() throws InterruptedException {
         runner.withPropertyValues("akka.config.address=127.0.0.1:9707")
                 .withUserConfiguration(TestAutoConfig.class)
                 .run((context -> {
                     assertThat(context).getBean(TestAkkaConfigListener.class);
+                }));
+        new CountDownLatch(1).await();
+    }
+
+
+    @Test
+    public void testAkkaConfigAnnotation1() throws InterruptedException {
+        runner.withPropertyValues("akka.config.address=127.0.0.1:9707")
+                .withUserConfiguration(TestAutoConfig1.class)
+                .run((context -> {
+                    assertThat(context).as("1111");
                 }));
         new CountDownLatch(1).await();
     }
@@ -44,12 +56,37 @@ public class AkkaConfigAutoConfigurationTest {
 
         @Override
         public void active(Config config) {
-            System.out.println(config);
+            System.out.println("TestAkkaConfigListener" + config);
         }
 
         @Override
         public void verify(Config config) {
-            System.out.println(config);
+            System.out.println("TestAkkaConfigListener" + config);
+        }
+    }
+
+    @Configuration
+    static class TestAutoConfig1{
+        @Bean
+        public Object configListener() {
+            return new TestAkkaConfigListener();
+        }
+        @Bean
+        public Object configListener1() {
+            return new TestAkkaConfigListener1();
+        }
+    }
+    @AkkaConfig(namespace = {"akka-name"}, environment = {"prod"})
+    static class TestAkkaConfigListener1 implements AkkaConfigListener {
+
+        @Override
+        public void active(Config config) {
+            System.out.println("TestAkkaConfigListener1" + config);
+        }
+
+        @Override
+        public void verify(Config config) {
+            System.out.println("TestAkkaConfigListener1" + config);
         }
     }
 }

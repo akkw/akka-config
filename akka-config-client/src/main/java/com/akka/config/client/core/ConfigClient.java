@@ -7,6 +7,7 @@ import com.akka.config.api.ConfigWatch;
 import com.akka.config.api.core.Config;
 import com.akka.config.protocol.MetadataResponse;
 import com.akka.config.protocol.ReadConfigResponse;
+import com.akka.config.protocol.ResponseCode;
 import com.akka.remoting.exception.RemotingConnectException;
 import com.akka.remoting.exception.RemotingSendRequestException;
 import com.akka.remoting.exception.RemotingTimeoutException;
@@ -73,9 +74,14 @@ public class ConfigClient implements Client {
                 if (configMetadataSnapshot.isVerifyVersionUpdate()) {
                     try {
                         final ReadConfigResponse response = networkClient.readConfig(namespace, environment, newMetadata.getVerifyVersion());
-                        final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
-                        final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
-                        configWatch.verify(config);
+                        if (response.getCode() == ResponseCode.SUCCESS.code()) {
+                            final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
+                            final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
+                            configWatch.verify(config);
+                        } else {
+                            logger.error("failed to read the configuration, please check. namespace: {}, environment: {} code: {}, message: {}",
+                                    namespace, environment, response.getCode(), new String(response.getMessage() != null ? response.getMessage() : new byte[0]));
+                        }
                     } catch (Exception e) {
                         logger.error("The client failed to verify the configuration. namespace: {}, environment: {}", namespace, environment, e);
                     }
@@ -84,9 +90,14 @@ public class ConfigClient implements Client {
                 if (configMetadataSnapshot.isActivateVersionUpdate()) {
                     try {
                         final ReadConfigResponse response = networkClient.readConfig(namespace, environment, newMetadata.getActivateVersion());
-                        final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
-                        final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
-                        configWatch.activate(config);
+                        if (response.getCode() == ResponseCode.SUCCESS.code()) {
+                            final ConfigWatch configWatch = watchMap.get(namespace).get(environment);
+                            final Config config = new Config(response.getBody(), response.getNamespace(), response.getEnvironment(), response.getVersion());
+                            configWatch.activate(config);
+                        } else {
+                            logger.error("failed to read the configuration, please check. namespace: {}, environment: {} code: {}, message: {}",
+                                    namespace, environment, response.getCode(), new String(response.getMessage() != null ? response.getMessage() : new byte[0]));
+                        }
                     } catch (Exception e) {
                         logger.error("The client failed to activate the configuration. namespace: {}, environment: {}", namespace, environment, e);
                     }

@@ -10,6 +10,12 @@ public class ReadConfigResponse extends Response {
     private Integer version;
 
 
+    public ReadConfigResponse() {
+    }
+
+    public ReadConfigResponse(int code) {
+        super(code);
+    }
 
     public String getNamespace() {
         return namespace;

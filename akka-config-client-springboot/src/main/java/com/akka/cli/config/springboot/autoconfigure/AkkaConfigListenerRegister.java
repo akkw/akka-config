@@ -48,9 +48,12 @@ public class AkkaConfigListenerRegister implements ApplicationContextAware {
 
         GenericApplicationContext genericApplicationContext = (GenericApplicationContext) applicationContext;
         final String name = DefaultAkkaConfigClient.class.getName();
-        genericApplicationContext.registerBean(name, DefaultAkkaConfigClient.class,
-                () -> createDefaultAkkaConfigClient(name, bean, annotation));
 
+
+        if (!genericApplicationContext.containsBeanDefinition(name)) {
+            genericApplicationContext.registerBean(name, DefaultAkkaConfigClient.class,
+                    () -> createDefaultAkkaConfigClient(name, bean, annotation));
+        }
         final DefaultAkkaConfigClient defaultAkkaConfigClient = genericApplicationContext.getBean(name, DefaultAkkaConfigClient.class);
         if (!defaultAkkaConfigClient.isStarted()) {
             defaultAkkaConfigClient.start();

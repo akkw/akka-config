@@ -41,7 +41,7 @@ public class ConfigNetworkClient implements LifeCycle {
     public ReadConfigResponse readConfig(String namespace, String environment, Integer version) throws RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException, InterruptedException {
         final ReadConfigRequest request = new ReadConfigRequest(namespace, environment,version);
         final Command respCommand = socketClient.invokeSync(clientConfig.getRemoteAddress(), buildRequestCommand(request, CommandCode.READ), 3000);
-        return com.alibaba.fastjson2.JSON.parseObject(respCommand.getBody(), ReadConfigResponse.class);
+        return JSON.parseObject(respCommand.getBody(), ReadConfigResponse.class);
     }
 
     public Command buildRequestCommand(Request request, CommandCode code) {
